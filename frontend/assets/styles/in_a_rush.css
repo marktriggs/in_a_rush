@@ -31,12 +31,12 @@
 }
 
 .inactive-shortcut-row {
-    color: #ccc;
+    color: #888;
     font-style: italic;
 }
 
 .inactive-shortcut-row .shortcut-key {
-    color: #ccc;
+    color: #aaa;
     background-color: #efefef;
     border: solid #bbb 1px;
 }
