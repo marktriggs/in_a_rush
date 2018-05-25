@@ -214,7 +214,7 @@ $(function () {
 
   /* Handle a keydown event */
   var handleKeypress = function (event) {
-      $('title').text(originalTitle);
+    $('title').text(originalTitle);
 
     if ($.inArray(event.target.tagName, ['INPUT', 'TEXTAREA', 'SELECT']) >= 0 ||
         event.target.isContentEditable) {
@@ -505,6 +505,13 @@ $(function () {
   /* Event listeners */
   document.addEventListener('focusout', function (event) {
     clearFocus();
+  });
+
+  document.addEventListener('keydown', function (event) {
+    if (event.key == 'Escape') {
+      pendingKeystrokes = [];
+      return true;
+    };
   });
 
   document.addEventListener('keypress', function (event) {
