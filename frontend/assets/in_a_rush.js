@@ -118,7 +118,6 @@ $(function () {
   /* Show the help modal. */
   var helpModalTemplate = $(
     '<div class="container-fluid">' +
-    '<div class="alert alert-info">Keyboard shortcuts are context-sensitive&mdash;different areas support different shortcuts!</div>' +
     '  <table class="table">' +
     '    <thead>' +
     '      <tr>' +
@@ -142,9 +141,7 @@ $(function () {
     var template_row = content.find('.template-row');
 
     $.each(bindings, function (idx, binding_def) {
-      if (binding_def.condition && !binding_def.condition()) {
-        return;
-      }
+      var disabled = binding_def.condition && !binding_def.condition();
 
       if (!lastHeader || lastHeader != binding_def.category) {
         var header = template_row.clone().removeClass().addClass('shortcut-header');
@@ -161,6 +158,8 @@ $(function () {
 
 
       var row = template_row.clone().removeClass().addClass('shortcut-row');
+      row.addClass(disabled ? 'inactive-shortcut-row' : 'active-shortcut-row');
+
       row.attr('key-sequence', binding_def.keySequence.join(' '));
       var shortcutKeys = $('<span>');
 
@@ -199,7 +198,7 @@ $(function () {
 
     var partialKeySequence = pendingKeystrokes.map(toKeyString).join(' ');
 
-    $('tr.shortcut-row').each(function (idx, row) {
+    $('tr.active-shortcut-row').each(function (idx, row) {
       if ($(row).attr('key-sequence').startsWith(partialKeySequence)) {
         $(row).find('.shortcut-key').slice(0, pendingKeystrokes.length).addClass('shortcut-entered');
       }

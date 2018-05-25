@@ -29,3 +29,14 @@
     background-color: #fbdcdc;
     transform: scale(1.15);
 }
+
+.inactive-shortcut-row {
+    color: #ccc;
+    font-style: italic;
+}
+
+.inactive-shortcut-row .shortcut-key {
+    color: #ccc;
+    background-color: #efefef;
+    border: solid #bbb 1px;
+}
