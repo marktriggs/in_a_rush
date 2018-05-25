@@ -103,12 +103,12 @@ $(function () {
     '  <table class="table">' +
     '    <thead>' +
     '      <tr>' +
-    '        <th>Action</th>' +
-    '        <th>Shortcut</th>' +
+    '        <th></th>' +
+    '        <th>Keyboard shortcut</th>' +
     '      </tr>' +
     '    </thead>' +
     '    <tbody>' +
-    '        <tr style="display: none" class="template-row">' +
+    '        <tr style="display: none" class="shortcut-row template-row">' +
     '          <td class="description"></td>' +
     '          <td class="shortcut"></td>' +
     '        </tr>' +
@@ -141,10 +141,15 @@ $(function () {
       }
 
 
-      var shortcut = binding_def.keySequence.join(" ");
       var row = template_row.clone();
+      var shortcutKeys = $('<span>');
+
+      $.each(binding_def.keySequence, function (idx, key) {
+        shortcutKeys.append($('<span class="shortcut-key" />').text(key));
+      });
+
       row.find('.description').text(binding_def.description);
-      row.find('.shortcut').text(shortcut);
+      row.find('.shortcut').append(shortcutKeys);
       row.show();
 
       tbody.append(row);
@@ -167,14 +172,14 @@ $(function () {
     keySequence: ['?'],
     handler: showHelpModal,
     description: "This shortcut reference",
-    category: "Shortcuts",
+    category: "Help",
   });
 
   addBinding({
     keySequence: ['Escape'],
     handler: undefined,
     description: "Close a modal window (e.g. this one)",
-    category: "Shortcuts",
+    category: "Help",
   });
 
   addBinding({

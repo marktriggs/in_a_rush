@@ -1,3 +1,22 @@
 .in-a-rush-focused {
     border: solid #ccc 3px;
 }
+
+.shortcut-row .description {
+    vertical-align: middle;
+}
+
+.shortcut-row .shortcut-category {
+    font-weight: bold;
+}
+
+.shortcut-row .shortcut-key {
+    font-family: monospace;
+    color: black;
+    display: inline-block;
+    background-color: #eee;
+    border: solid #aaa 1px;
+    padding: 3px 9px;
+    margin-right: 5px;
+    border-radius: 3px;
+}
