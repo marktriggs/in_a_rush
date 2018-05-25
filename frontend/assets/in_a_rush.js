@@ -2,20 +2,32 @@ $(function () {
 
   "use strict";
 
-  /* Clear existing ArchivesSpace shortcuts */
+  /* We'll rewrite the page title to show active keystrokes.  Keep the old one
+  so we can restore it. */
+  var originalTitle = $('title').text();
+
+  /* Keys pressed that aren't a complete command */
+  var pendingKeystrokes = [];
+
+  /* Registered key bindings */
+  var bindings = [];
+
+
+  /* Clear existing ArchivesSpace shortcuts.  If this plugin ever gets merged,
+  we could just remove them from utils.js and wouldn't need this. */
   $.each($._data(document).events.keydown.slice(), function (idx, event) {
     if (event.data && event.data.keys) {
       $(document).off('keydown', event.handler);
     }
   });
 
+  /* ... or this. */
   $.each($._data(window).events.keydown.slice(), function (idx, event) {
     $(window).off('keydown', event.handler);
   });
 
 
-  var bindings = [];
-
+  /* Parse a string like 'Control-c' into our canonical representation. */
   var parseKeyString = function (input) {
     var modifiers = [];
     var key = undefined;
@@ -45,6 +57,7 @@ $(function () {
     };
   };
 
+  /* Parse a keydown event into our canonical representation. */
   var parseKeydown = function (event) {
     var modifiers = [];
 
@@ -58,6 +71,7 @@ $(function () {
     };
   };
 
+  /* Turn our canonical representation of a keystroke back into a string. */
   var toKeyString = function (parsedKey) {
     var modifiers = parsedKey.modifiers.join('-');
 
@@ -68,10 +82,12 @@ $(function () {
     }
   };
 
+  /* Clear our currently focused search item. */
   var clearFocus = function () {
     $('.in-a-rush-focused').removeClass('in-a-rush-focused');
   };
 
+  /* Focus the search box. */
   var searchHandler = function () {
     var selector = $('#global-search-box');
 
@@ -79,6 +95,7 @@ $(function () {
     selector.focus();
   };
 
+/* Move between search results. */
   var moveHandler = function (direction) {
     var currentRow = $(':focus').closest('#tabledSearchResults tbody tr')[0];
 
@@ -98,6 +115,7 @@ $(function () {
     selector.addClass('in-a-rush-focused');
   };
 
+  /* Show the help modal. */
   var helpModalTemplate = $(
     '<div class="container-fluid">' +
     '  <table class="table">' +
@@ -108,7 +126,7 @@ $(function () {
     '      </tr>' +
     '    </thead>' +
     '    <tbody>' +
-    '        <tr style="display: none" class="shortcut-row template-row">' +
+    '        <tr style="display: none" class="template-row">' +
     '          <td class="description"></td>' +
     '          <td class="shortcut"></td>' +
     '        </tr>' +
@@ -128,7 +146,7 @@ $(function () {
       }
 
       if (!lastHeader || lastHeader != binding_def.category) {
-        var header = template_row.clone();
+        var header = template_row.clone().removeClass().addClass('shortcut-header');
         var td = $('<td class="shortcut-category" colspan="2" />');
         td.text(binding_def.category);
 
@@ -141,7 +159,8 @@ $(function () {
       }
 
 
-      var row = template_row.clone();
+      var row = template_row.clone().removeClass().addClass('shortcut-row');
+      row.attr('key-sequence', binding_def.keySequence.join(' '));
       var shortcutKeys = $('<span>');
 
       $.each(binding_def.keySequence, function (idx, key) {
@@ -161,11 +180,109 @@ $(function () {
                        'large');
   };
 
+
+  /* If a partial key sequence was entered while the help modal is up, highlight
+     the matching keys. */
+  var updateHelpModal = function () {
+    var modal = $('#inARushHelp');
+
+    if (modal.length === 0) {
+      return;
+    }
+
+    modal.find('.shortcut-entered').removeClass('shortcut-entered');
+
+    if (pendingKeystrokes.length === 0) {
+      return;
+    }
+
+    var partialKeySequence = pendingKeystrokes.map(toKeyString).join(' ');
+
+    $('tr.shortcut-row').each(function (idx, row) {
+      if ($(row).attr('key-sequence').startsWith(partialKeySequence)) {
+        $(row).find('.shortcut-key').slice(0, pendingKeystrokes.length).addClass('shortcut-entered');
+      }
+    });
+  };
+
+  /* Add a new key binding */
   var addBinding = function(def) {
     /* Normalise our sequence */
     def.parsedSequence = def.keySequence.map(parseKeyString);
     bindings.push(def);
   };
+
+  /* Handle a keydown event */
+  var handleKeypress = function (event) {
+      $('title').text(originalTitle);
+
+    if ($.inArray(event.target.tagName, ['INPUT', 'TEXTAREA', 'SELECT']) >= 0 ||
+        event.target.isContentEditable) {
+      /* Leave it alone */
+      return true;
+    }
+
+    var key = parseKeydown(event);
+
+    pendingKeystrokes.push(key);
+
+    var matchedBinding = undefined;
+    var partialMatch = false;
+
+    $.each(bindings, function (idx, binding_def) {
+      if (binding_def.parsedSequence.map(toKeyString).join(' ') === pendingKeystrokes.map(toKeyString).join(' ')) {
+        /* exact match */
+        matchedBinding = binding_def;
+        return;
+      }
+
+      var prefixMatched = true;
+      $.each(pendingKeystrokes, function (idx, key) {
+        if (idx < binding_def.parsedSequence.length && toKeyString(key) === toKeyString(binding_def.parsedSequence[idx])) {
+          /* OK */
+        } else {
+          prefixMatched = false;
+          return;
+        }
+      });
+
+      if (!partialMatch) {
+        partialMatch = prefixMatched;
+      }
+    });
+
+    if (partialMatch) {
+      $('title').text(pendingKeystrokes.map(toKeyString).join(' -> '));
+
+      updateHelpModal();
+
+      event.preventDefault();
+      event.stopPropagation();
+      return false;
+    }
+
+    pendingKeystrokes = [];
+
+    if (matchedBinding) {
+      if (matchedBinding.condition && !matchedBinding.condition()) {
+        return true;
+      }
+
+      if (matchedBinding.handler) {
+        /* Hide any existing help modal */
+        $('#inARushHelp').modal('hide').data('bs.modal', null);
+
+        matchedBinding.handler();
+        event.preventDefault();
+        event.stopPropagation();
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  /*** Default keyboard shortcut definitions!  ***/
 
   /* FIXME: We'll need to i18n strings here. */
   addBinding({
@@ -372,78 +489,15 @@ $(function () {
     category: "Miscellaneous",
   });
 
+  /*** End of default keyboard shortcut definitions ***/
+
+
+  /* Event listeners */
   document.addEventListener('focusout', function (event) {
     clearFocus();
   });
 
-  var originalTitle = $('title').text();
-  var pendingKeystrokes = [];
-
   document.addEventListener('keypress', function (event) {
-    $('title').text(originalTitle);
-
-    if ($.inArray(event.target.tagName, ['INPUT', 'TEXTAREA', 'SELECT']) >= 0 ||
-        event.target.isContentEditable) {
-      /* Leave it alone */
-      return true;
-    }
-
-    var key = parseKeydown(event);
-
-    pendingKeystrokes.push(key);
-    console.log(toKeyString(key));
-
-    var matchedBinding = undefined;
-    var partialMatch = false;
-
-    $.each(bindings, function (idx, binding_def) {
-      if (binding_def.parsedSequence.map(toKeyString).join(' ') === pendingKeystrokes.map(toKeyString).join(' ')) {
-        /* exact match */
-        matchedBinding = binding_def;
-        return;
-      }
-
-      var prefixMatched = true;
-      $.each(pendingKeystrokes, function (idx, key) {
-        if (idx < binding_def.parsedSequence.length && toKeyString(key) === toKeyString(binding_def.parsedSequence[idx])) {
-          /* OK */
-        } else {
-          prefixMatched = false;
-          return;
-        }
-      });
-
-      if (!partialMatch) {
-        partialMatch = prefixMatched;
-      }
-    });
-
-    if (partialMatch) {
-      $('title').text(pendingKeystrokes.map(toKeyString).join(' -> '));
-
-      event.preventDefault();
-      event.stopPropagation();
-      return false;
-    }
-
-    pendingKeystrokes = [];
-
-    if (matchedBinding) {
-      if (matchedBinding.condition && !matchedBinding.condition()) {
-        return true;
-      }
-
-      if (matchedBinding.handler) {
-        /* Hide any existing help modal */
-        $('#inARushHelp').modal('hide').data('bs.modal', null);
-
-        matchedBinding.handler();
-        event.preventDefault();
-        event.stopPropagation();
-        return false;
-      }
-    }
-
-    return true;
+    return handleKeypress(event);
   });
 });

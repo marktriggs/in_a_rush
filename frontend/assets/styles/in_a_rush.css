@@ -20,3 +20,8 @@
     margin-right: 5px;
     border-radius: 3px;
 }
+
+.shortcut-row .shortcut-key.shortcut-entered {
+    border: solid red 1px;
+    background-color: #fbdcdc;
+}
