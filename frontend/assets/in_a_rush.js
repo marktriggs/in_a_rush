@@ -118,6 +118,7 @@ $(function () {
   /* Show the help modal. */
   var helpModalTemplate = $(
     '<div class="container-fluid">' +
+    '<div class="alert alert-info">Keyboard shortcuts are context-sensitive&mdash;different areas support different shortcuts!</div>' +
     '  <table class="table">' +
     '    <thead>' +
     '      <tr>' +
@@ -251,10 +252,10 @@ $(function () {
       }
     });
 
+    updateHelpModal();
+
     if (partialMatch) {
       $('title').text(pendingKeystrokes.map(toKeyString).join(' -> '));
-
-      updateHelpModal();
 
       event.preventDefault();
       event.stopPropagation();
@@ -269,10 +270,20 @@ $(function () {
       }
 
       if (matchedBinding.handler) {
-        /* Hide any existing help modal */
-        $('#inARushHelp').modal('hide').data('bs.modal', null);
+        var delay = 0;
 
-        matchedBinding.handler();
+        /* Small detail: if we're showing the help, give a moment for the final
+           key to light up before we dismiss the modal.  Just for the look of the
+           thing. */
+        if ($('#inARushHelp').length > 0) {
+          delay = 200;
+        }
+
+        setTimeout(function () {
+          $('#inARushHelp').modal('hide').data('bs.modal', null);
+          matchedBinding.handler();
+        }, delay);
+
         event.preventDefault();
         event.stopPropagation();
         return false;
