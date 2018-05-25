@@ -181,6 +181,9 @@ $(function () {
     keySequence: ['/'],
     handler: searchHandler,
     description: "Go to search",
+    condition: function () {
+      return $('#global-search-box').length > 0;
+    },
     category: "Navigate",
   });
 
@@ -204,6 +207,7 @@ $(function () {
     keySequence: ['B'],
     handler: function () { $('li.browse-container a.dropdown-toggle').trigger('click.bs.dropdown'); },
     description: "Open 'Browse' menu",
+    condition: function () { return $('li.browse-container a.dropdown-toggle').length > 0; },
     category: "Navigate",
   });
 
@@ -211,6 +215,7 @@ $(function () {
     keySequence: ['C'],
     handler: function () { $('li.create-container a.dropdown-toggle').trigger('click.bs.dropdown'); },
     description: "Open 'Create' menu",
+    condition: function () { return $('li.create-container a.dropdown-toggle').length > 0; },
     category: "Navigate",
   });
 
