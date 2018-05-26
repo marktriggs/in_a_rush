@@ -246,10 +246,12 @@ $(function () {
 
   /* Handle a keydown event */
   var handleKeypress = function (event) {
-    if ($.inArray(event.target.tagName, ['INPUT', 'TEXTAREA', 'SELECT']) >= 0 ||
-        event.target.isContentEditable) {
-      /* Leave it alone */
-      return true;
+    if (!event.ctrlKey) {
+      if ($.inArray(event.target.tagName, ['INPUT', 'TEXTAREA', 'SELECT']) >= 0 ||
+          event.target.isContentEditable) {
+        /* Leave it alone */
+        return true;
+      }
     }
 
     var key = parseKeydown(event);
@@ -515,7 +517,7 @@ $(function () {
   });
 
   addBinding({
-    keySequence: ['Control-x'],
+    keySequence: ['Control-k'],
     handler: function () {
       $('form.aspace-record-form .form-actions .btn-cancel')[0].click();
     },
@@ -556,9 +558,7 @@ $(function () {
       updateKeystrokeIndicator();
       return true;
     };
-  });
 
-  document.addEventListener('keypress', function (event) {
     return handleKeypress(event);
   });
 });
