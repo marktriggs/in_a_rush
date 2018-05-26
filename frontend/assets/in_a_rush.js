@@ -131,6 +131,8 @@ $(function () {
     '</div>');
 
   var showHelpModal = function () {
+    $('#inARushHelp').modal('hide').data('bs.modal', null);
+
     var lastHeader = undefined;
     var content = helpModalTemplate.clone();
     var tbody = content.find('tbody');
