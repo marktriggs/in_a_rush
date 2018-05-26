@@ -218,12 +218,6 @@ $(function () {
 
     $.each(pendingKeystrokes, function (idx, key) {
       keyElt = $('<div class="shortcut-key" />').text(toKeyString(key));
-
-      if (idx < pendingKeystrokes.length - 1) {
-        /* Apply the shortcut-entered class to all but the last key */
-        keyElt.addClass('shortcut-entered');
-      }
-
       indicator.append(keyElt);
     });
 
