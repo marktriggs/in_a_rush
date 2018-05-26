@@ -10,7 +10,7 @@
     font-weight: bold;
 }
 
-.shortcut-row .shortcut-key {
+.shortcut-key {
     font-family: monospace;
     color: black;
     display: inline-block;
@@ -24,7 +24,7 @@
     transition: all 0.1s ease;
 }
 
-.shortcut-row .shortcut-key.shortcut-entered {
+.shortcut-key.shortcut-entered {
     border: solid red 1px;
     background-color: #fbdcdc;
     transform: scale(1.15);
@@ -39,4 +39,13 @@
     color: #aaa;
     background-color: #efefef;
     border: solid #bbb 1px;
+}
+
+.in-a-rush-keystroke-indicator {
+    display: inline-block;
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    padding: 5px;
+    background-color: white;
 }

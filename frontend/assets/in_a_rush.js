@@ -2,10 +2,6 @@ $(function () {
 
   "use strict";
 
-  /* We'll rewrite the page title to show active keystrokes.  Keep the old one
-  so we can restore it. */
-  var originalTitle = $('title').text();
-
   /* Keys pressed that aren't a complete command */
   var pendingKeystrokes = [];
 
@@ -141,7 +137,7 @@ $(function () {
     var template_row = content.find('.template-row');
 
     $.each(bindings, function (idx, binding_def) {
-      var disabled = binding_def.condition && !binding_def.condition();
+      var disabled = !binding_def.condition();
 
       if (!lastHeader || lastHeader != binding_def.category) {
         var header = template_row.clone().removeClass().addClass('shortcut-header');
@@ -205,17 +201,51 @@ $(function () {
     });
   };
 
+  var updateKeystrokeIndicator = function () {
+    $('#inARushIndicator').fadeOut(500);
+
+    if ($('#inARushHelp:visible').length > 0 || pendingKeystrokes.length === 0) {
+      /* If the help is shown, or there are no keystrokes to show, don't show
+         the keystroke indicator. */
+      return;
+    }
+
+    $('#inARushIndicator').remove();
+    var indicator = $('<div id="inARushIndicator" class="in-a-rush-keystroke-indicator" />');
+    var keyElt = undefined;
+
+    $.each(pendingKeystrokes, function (idx, key) {
+      keyElt = $('<div class="shortcut-key" />').text(toKeyString(key));
+
+      if (idx < pendingKeystrokes.length - 1) {
+        /* Apply the shortcut-entered class to all but the last key */
+        keyElt.addClass('shortcut-entered');
+      }
+
+      indicator.append(keyElt);
+    });
+
+    $(document.body).append(indicator);
+
+    /* Animate the CSS class change of the last entered key for prettiness. */
+    setTimeout(function () {
+      keyElt.addClass('shortcut-entered');
+    }, 0);
+  };
+
   /* Add a new key binding */
   var addBinding = function(def) {
     /* Normalise our sequence */
+    if (!def.condition) {
+      def.condition = function () { return true; };
+    }
+
     def.parsedSequence = def.keySequence.map(parseKeyString);
     bindings.push(def);
   };
 
   /* Handle a keydown event */
   var handleKeypress = function (event) {
-    $('title').text(originalTitle);
-
     if ($.inArray(event.target.tagName, ['INPUT', 'TEXTAREA', 'SELECT']) >= 0 ||
         event.target.isContentEditable) {
       /* Leave it alone */
@@ -253,9 +283,11 @@ $(function () {
 
     updateHelpModal();
 
-    if (partialMatch) {
-      $('title').text(pendingKeystrokes.map(toKeyString).join(' -> '));
+    if (partialMatch || (matchedBinding && matchedBinding.condition())) {
+      updateKeystrokeIndicator();
+    }
 
+    if (partialMatch) {
       event.preventDefault();
       event.stopPropagation();
       return false;
@@ -264,7 +296,9 @@ $(function () {
     pendingKeystrokes = [];
 
     if (matchedBinding) {
-      if (matchedBinding.condition && !matchedBinding.condition()) {
+      if (!matchedBinding.condition()) {
+        /* This keybinding isn't applicable in this context. */
+        updateKeystrokeIndicator();
         return true;
       }
 
@@ -281,6 +315,7 @@ $(function () {
         setTimeout(function () {
           $('#inARushHelp').modal('hide').data('bs.modal', null);
           matchedBinding.handler();
+          updateKeystrokeIndicator();
         }, delay);
 
         event.preventDefault();
@@ -289,6 +324,7 @@ $(function () {
       }
     }
 
+    updateKeystrokeIndicator();
     return true;
   };
 
@@ -508,8 +544,16 @@ $(function () {
   });
 
   document.addEventListener('keydown', function (event) {
+    if (event.key == '?') {
+      pendingKeystrokes = [];
+      updateKeystrokeIndicator();
+      showHelpModal();
+      return true;
+    }
+
     if (event.key == 'Escape') {
       pendingKeystrokes = [];
+      updateKeystrokeIndicator();
       return true;
     };
   });
