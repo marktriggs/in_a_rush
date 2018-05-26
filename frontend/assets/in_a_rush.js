@@ -115,12 +115,6 @@ $(function () {
   var helpModalTemplate = $(
     '<div class="container-fluid">' +
     '  <table class="table">' +
-    '    <thead>' +
-    '      <tr>' +
-    '        <th></th>' +
-    '        <th>Keyboard shortcut</th>' +
-    '      </tr>' +
-    '    </thead>' +
     '    <tbody>' +
     '        <tr style="display: none" class="template-row">' +
     '          <td class="description"></td>' +
