@@ -521,7 +521,9 @@ $(function () {
   addBinding({
     keySequence: ['i', 'd', 'd', 'q', 'd'],
     handler: function () {
-      window.alert("Nice try.");
+      setTimeout(function () {
+        window.alert("Nice try.");
+      }, 200);
     },
     description: "Become admin",
     category: "Miscellaneous",
@@ -547,7 +549,7 @@ $(function () {
       pendingKeystrokes = [];
       updateKeystrokeIndicator();
       return true;
-    };
+    }
 
     return handleKeypress(event);
   });
