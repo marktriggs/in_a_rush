@@ -519,6 +519,18 @@ $(function () {
   });
 
   addBinding({
+    keySequence: ['Control-e', 'f'],
+    handler: function () {
+      return $('form.aspace-record-form .record-pane :input:visible').first().focus();
+    },
+    description: "Focus the first field in the edit form",
+    condition: function () {
+      return $('form.aspace-record-form .record-pane :input:visible').length > 0;
+    },
+    category: "Edit",
+  });
+
+  addBinding({
     keySequence: ['Control-e', 'd'],
     handler: function () {
       $('form.aspace-record-form section[data-object-name="date"] .subrecord-form-heading .btn')[0].click();
