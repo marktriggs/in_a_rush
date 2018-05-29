@@ -8,19 +8,29 @@ $(function () {
   /* Registered key bindings */
   var bindings = [];
 
-
   /* Clear existing ArchivesSpace shortcuts.  If this plugin ever gets merged,
-  we could just remove them from utils.js and wouldn't need this. */
-  $.each($._data(document).events.keydown.slice(), function (idx, event) {
-    if (event.data && event.data.keys) {
-      $(document).off('keydown', event.handler);
+  we could just remove them from utils.js and form.js and wouldn't need this. */
+  var clearExistingShortcuts = function () {
+    if ($._data(document).events.keydown) {
+      $.each($._data(document).events.keydown.slice(), function (idx, event) {
+        if (event.data && event.data.keys) {
+          $(document).off('keydown', event.handler);
+        }
+      });
     }
-  });
 
-  /* ... or this. */
-  $.each($._data(window).events.keydown.slice(), function (idx, event) {
-    $(window).off('keydown', event.handler);
-  });
+    if ($._data(window).events.keydown) {
+      $.each($._data(window).events.keydown.slice(), function (idx, event) {
+        $(window).off('keydown', event.handler);
+      });
+    }
+  };
+
+  clearExistingShortcuts();
+  /* We need to clear shortcuts whenever the form changes because they get
+     re-established! */
+  $('form').on('formchanged.aspace', clearExistingShortcuts);
+  /* End of shortcut clearning nonsense */
 
 
   /* Parse a string like 'Control-c' into our canonical representation. */
@@ -236,7 +246,7 @@ $(function () {
 
   /* Handle a keydown event */
   var handleKeypress = function (event) {
-    if (!event.ctrlKey) {
+    if (!event.ctrlKey && pendingKeystrokes.length === 0) {
       if ($.inArray(event.target.tagName, ['INPUT', 'TEXTAREA', 'SELECT']) >= 0 ||
           event.target.isContentEditable) {
         /* Leave it alone */
@@ -245,6 +255,21 @@ $(function () {
     }
 
     var key = parseKeydown(event);
+
+    if ($.inArray(key.key, key.modifiers) >= 0) {
+      /* A keydown event for a single modifier like 'Control'.  We don't care
+      about those in isolation, so skip this event. */
+      return true;
+    }
+
+    /* If the first keystroke included a Control modifier, ignore the modifiers
+       on subsequent keystrokes.  This allows a binding like `Control-e e` to be
+       entered as `Control-e Control-e`, which can be more kind to people's
+       fingers. */
+    if (pendingKeystrokes.length > 0 &&
+        $.inArray('Control', pendingKeystrokes[0].modifiers) >= 0) {
+      key.modifiers = [];
+    }
 
     pendingKeystrokes.push(key);
 
@@ -493,6 +518,143 @@ $(function () {
     category: "Create",
   });
 
+  addBinding({
+    keySequence: ['Control-e', 'd'],
+    handler: function () {
+      $('form.aspace-record-form section[data-object-name="date"] .subrecord-form-heading .btn')[0].click();
+    },
+    description: "Add a date subrecord",
+    condition: function () {
+      return $('form.aspace-record-form section[data-object-name="date"] .subrecord-form-heading .btn').length > 0;
+    },
+    category: "Edit",
+  });
+
+  addBinding({
+    keySequence: ['Control-e', 'e'],
+    handler: function () {
+      $('form.aspace-record-form section[data-object-name="extent"] .subrecord-form-heading .btn')[0].click();
+    },
+    description: "Add a extent subrecord",
+    condition: function () {
+      return $('form.aspace-record-form section[data-object-name="extent"] .subrecord-form-heading .btn').length > 0;
+    },
+    category: "Edit",
+  });
+
+  addBinding({
+    keySequence: ['Control-e', 'l'],
+    handler: function () {
+      $('form.aspace-record-form section[data-object-name="linked_agent"] .subrecord-form-heading .btn')[0].click();
+    },
+    description: "Add agent link subrecord",
+    condition: function () {
+      return $('form.aspace-record-form section[data-object-name="linked_agent"] .subrecord-form-heading .btn').length > 0;
+    },
+    category: "Edit",
+  });
+
+  addBinding({
+    keySequence: ['Control-e', 's'],
+    handler: function () {
+      $('form.aspace-record-form section[data-object-name="subject"] .subrecord-form-heading .btn')[0].click();
+    },
+    description: "Add subject subrecord",
+    condition: function () {
+      return $('form.aspace-record-form section[data-object-name="subject"] .subrecord-form-heading .btn').length > 0;
+    },
+    category: "Edit",
+  });
+
+  addBinding({
+    keySequence: ['Control-e', 'k'],
+    handler: function () {
+      $(':focus').closest('.subrecord-form-fields').prev('.subrecord-form-remove')[0].click();
+    },
+    description: "Remove current subrecord",
+    condition: function () {
+      return $(':focus').closest('.subrecord-form-fields').prev('.subrecord-form-remove').length > 0;
+    },
+    category: "Edit",
+  });
+
+  addBinding({
+    keySequence: ['Control-e', 'x'],
+    handler: function () {
+      $('form.aspace-record-form section[data-object-name="external_document"] .subrecord-form-heading .btn')[0].click();
+    },
+    description: "Add external document subrecord",
+    condition: function () {
+      return $('form.aspace-record-form section[data-object-name="external_document"] .subrecord-form-heading .btn').length > 0;
+    },
+    category: "Edit",
+  });
+
+  addBinding({
+    keySequence: ['Control-e', 'c'],
+    handler: function () {
+      $('form.aspace-record-form section[data-object-name="instance"] .subrecord-form-heading .btn')[0].click();
+    },
+    description: "Add container instance subrecord",
+    condition: function () {
+      return $('form.aspace-record-form section[data-object-name="instance"] .subrecord-form-heading .btn').length > 0;
+    },
+    category: "Edit",
+  });
+
+  addBinding({
+    keySequence: ['Control-e', 'o'],
+    handler: function () {
+      $('form.aspace-record-form section[data-object-name="instance"] .subrecord-form-heading .btn')[1].click();
+    },
+    description: "Add digital object instance subrecord",
+    condition: function () {
+      return $('form.aspace-record-form section[data-object-name="instance"] .subrecord-form-heading .btn').length > 1;
+    },
+    category: "Edit",
+  });
+
+  addBinding({
+    keySequence: ['Control-e', 'n'],
+    handler: function () {
+      $('form.aspace-record-form #notes .subrecord-form-heading .add-note')[1].click();
+    },
+    description: "Add note subrecord",
+    condition: function () {
+      return $('form.aspace-record-form #notes .subrecord-form-heading .add-note').length > 0;
+    },
+    category: "Edit",
+  });
+
+  addBinding({
+    keySequence: ['Control-e', 'v'],
+    handler: function () {
+      $('#add-event-dropdown .btn')[1].click();
+    },
+    description: "Add event",
+    condition: function () {
+      return $('#add-event-dropdown .btn').length > 0;
+    },
+    category: "Edit",
+  });
+
+  addBinding({
+    keySequence: ['Control-e', 'a'],
+    handler: function () {
+      var record_specific_link = $('a[href*="assessments/new?record_uri"]');
+
+      if (record_specific_link.length > 0) {
+        window.location.href = record_specific_link.attr('href');
+      } else {
+        window.location.href = $('a[href*="assessments/new"]').attr('href');
+      }
+    },
+    description: "Add assessment",
+    condition: function () {
+      return $('a[href*="assessments/new"]').length > 0
+    },
+    category: "Edit",
+  });
 
   addBinding({
     keySequence: ['Control-s'],
