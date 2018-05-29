@@ -345,6 +345,21 @@ $(function () {
     return true;
   };
 
+  var focusSubrecordIfNeeded = function () {
+    var subrecord = $(':focus').closest('.subrecord-form-fields');
+
+    if (subrecord.length !== 1) {
+      return;
+    }
+
+    var offset = subrecord[0].getBoundingClientRect();
+    var viewportHeight = (window.innerHeight || document. documentElement.clientHeight);
+
+    if (offset.top < 0 || offset.bottom > viewportHeight) {
+      $(window).scrollTo(subrecord, 500);
+    }
+  };
+
   /*** Default keyboard shortcut definitions!  ***/
 
   /* FIXME: We'll need to i18n strings here. */
@@ -534,6 +549,7 @@ $(function () {
     keySequence: ['Control-e', 'd'],
     handler: function () {
       $('form.aspace-record-form section[data-object-name="date"] .subrecord-form-heading .btn')[0].click();
+      focusSubrecordIfNeeded();
     },
     description: "Add a date subrecord",
     condition: function () {
@@ -546,6 +562,7 @@ $(function () {
     keySequence: ['Control-e', 'e'],
     handler: function () {
       $('form.aspace-record-form section[data-object-name="extent"] .subrecord-form-heading .btn')[0].click();
+      focusSubrecordIfNeeded();
     },
     description: "Add a extent subrecord",
     condition: function () {
@@ -558,6 +575,7 @@ $(function () {
     keySequence: ['Control-e', 'l'],
     handler: function () {
       $('form.aspace-record-form section[data-object-name="linked_agent"] .subrecord-form-heading .btn')[0].click();
+      focusSubrecordIfNeeded();
     },
     description: "Add agent link subrecord",
     condition: function () {
@@ -570,6 +588,7 @@ $(function () {
     keySequence: ['Control-e', 's'],
     handler: function () {
       $('form.aspace-record-form section[data-object-name="subject"] .subrecord-form-heading .btn')[0].click();
+      focusSubrecordIfNeeded();
     },
     description: "Add subject subrecord",
     condition: function () {
@@ -594,6 +613,7 @@ $(function () {
     keySequence: ['Control-e', 'x'],
     handler: function () {
       $('form.aspace-record-form section[data-object-name="external_document"] .subrecord-form-heading .btn')[0].click();
+      focusSubrecordIfNeeded();
     },
     description: "Add external document subrecord",
     condition: function () {
@@ -606,6 +626,7 @@ $(function () {
     keySequence: ['Control-e', 'c'],
     handler: function () {
       $('form.aspace-record-form section[data-object-name="instance"] .subrecord-form-heading .btn')[0].click();
+      focusSubrecordIfNeeded();
     },
     description: "Add container instance subrecord",
     condition: function () {
@@ -618,6 +639,7 @@ $(function () {
     keySequence: ['Control-e', 'o'],
     handler: function () {
       $('form.aspace-record-form section[data-object-name="instance"] .subrecord-form-heading .btn')[1].click();
+      focusSubrecordIfNeeded();
     },
     description: "Add digital object instance subrecord",
     condition: function () {
@@ -630,6 +652,7 @@ $(function () {
     keySequence: ['Control-e', 'n'],
     handler: function () {
       $('form.aspace-record-form #notes .subrecord-form-heading .add-note')[1].click();
+      focusSubrecordIfNeeded();
     },
     description: "Add note subrecord",
     condition: function () {
