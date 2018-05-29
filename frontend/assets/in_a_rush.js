@@ -213,24 +213,37 @@ $(function () {
   };
 
   var updateKeystrokeIndicator = function () {
-    $('#inARushIndicator').fadeOut(500);
-
     if ($('#inARushHelp:visible').length > 0 || pendingKeystrokes.length === 0) {
       /* If the help is shown, or there are no keystrokes to show, don't show
          the keystroke indicator. */
+      $('#inARushIndicator').attr('id', null).fadeOut(500, function () {
+        $(this).remove()
+      });
       return;
     }
 
-    $('#inARushIndicator').remove();
-    var indicator = $('<div id="inARushIndicator" class="in-a-rush-keystroke-indicator" />');
+    var indicator = $('#inARushIndicator');
+
+    if (indicator.length === 0) {
+      indicator = $('<div id="inARushIndicator" class="in-a-rush-keystroke-indicator" />');
+      $(document.body).append(indicator);
+    }
+
+    /* No need to re-render our existing keys */
+    var existingKeys = indicator.find('.shortcut-key');
+    var existingKeyCount = existingKeys.length;
+
+    existingKeys.removeClass('shortcut-entered');
+
     var keyElt = undefined;
 
     $.each(pendingKeystrokes, function (idx, key) {
-      keyElt = $('<div class="shortcut-key" />').text(toKeyString(key));
-      indicator.append(keyElt);
+      if (idx >= existingKeyCount) {
+        keyElt = $('<div class="shortcut-key" />').text(toKeyString(key));
+        indicator.append(keyElt);
+      }
     });
 
-    $(document.body).append(indicator);
 
     /* Animate the CSS class change of the last entered key for prettiness. */
     setTimeout(function () {

@@ -21,7 +21,7 @@
     margin-right: 5px;
     border-radius: 3px;
 
-    transition: all 0.1s ease;
+    transition: all 0.3s linear;
 }
 
 .shortcut-key.shortcut-entered {
