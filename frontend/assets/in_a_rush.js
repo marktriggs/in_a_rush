@@ -33,6 +33,11 @@ $(function () {
   /* End of shortcut clearning nonsense */
 
 
+  var translate = function(s) {
+    return (IN_A_RUSH_TRANSLATIONS[s] || s);
+  };
+
+
   /* Parse a string like 'Control-c' into our canonical representation. */
   var parseKeyString = function (input) {
     var modifiers = [];
@@ -177,7 +182,7 @@ $(function () {
     });
 
     AS.openCustomModal('inARushHelp',
-                       'Keyboard shortcuts',
+                       translate('keyboard_shortcuts'),
                        content.html(),
                        'large');
   };
@@ -364,316 +369,349 @@ $(function () {
 
   /* FIXME: We'll need to i18n strings here. */
   addBinding({
+    id: 'shortcut_reference',
     keySequence: ['?'],
     handler: showHelpModal,
-    description: "This shortcut reference",
-    category: "Help",
+    description: translate('shortcut_reference'),
+    category: translate('category_help'),
   });
 
   addBinding({
+    id: 'close_modal',
     keySequence: ['Escape'],
     handler: undefined,
-    description: "Close a modal window (e.g. this one)",
-    category: "Help",
+    description: translate('close_modal'),
+    category: translate('category_help'),
   });
 
   addBinding({
+    id: 'go_to_search',
     keySequence: ['/'],
     handler: searchHandler,
-    description: "Go to search",
+    description: translate('go_to_search'),
     condition: function () {
       return $('#global-search-box').length > 0;
     },
-    category: "Navigate",
+    category: translate('category_navigate'),
   });
 
   addBinding({
+    id: 'next_search_result',
     keySequence: ['j'],
     handler: function () { moveHandler(1); },
-    description: "Go to next record in search results",
+    description: translate('next_search_result'),
     condition: function () { return $('#tabledSearchResults').length > 0; },
-    category: "Navigate",
+    category: translate('category_navigate'),
   });
 
   addBinding({
+    id: 'prev_search_result',
     keySequence: ['k'],
     handler: function () { moveHandler(-1); },
-    description: "Go to previous record in search results",
+    description: translate('prev_search_result'),
     condition: function () { return $('#tabledSearchResults').length > 0; },
-    category: "Navigate",
+    category: translate('category_navigate'),
   });
 
   addBinding({
+    id: 'open_browse_menu',
     keySequence: ['B'],
     handler: function () { $('li.browse-container a.dropdown-toggle').trigger('click.bs.dropdown'); },
-    description: "Open 'Browse' menu",
+    description: translate('open_browse_menu'),
     condition: function () { return $('li.browse-container a.dropdown-toggle').length > 0; },
-    category: "Navigate",
+    category: translate('category_navigate'),
   });
 
   addBinding({
+    id: 'open_create_menu',
     keySequence: ['C'],
     handler: function () { $('li.create-container a.dropdown-toggle').trigger('click.bs.dropdown'); },
-    description: "Open 'Create' menu",
+    description: translate('open_create_menu'),
     condition: function () { return $('li.create-container a.dropdown-toggle').length > 0; },
-    category: "Navigate",
+    category: translate('category_navigate'),
   });
 
   /* Browse things */
   addBinding({
+    id: 'lassie_come_home',
     keySequence: ['g', 'h'],
     handler: function () { window.location.href = APP_PATH; },
-    description: "Go to home screen",
-    category: "Browse",
+    description: translate('lassie_come_home'),
+    category: translate('category_browse'),
   });
 
   addBinding({
+    id: 'browse_resources',
     keySequence: ['g', 'r'],
     handler: function () { window.location.href = APP_PATH + 'resources'; },
-    description: "Go to browse resources",
+    description: translate('browse_resources'),
     condition: function () { return $('.browse-container a[href="' + APP_PATH + 'resources' + '"]').length > 0; },
-    category: "Browse",
+    category: translate('category_browse'),
   });
 
   addBinding({
+    id: 'browse_accessions',
     keySequence: ['g', 'a'],
     handler: function () { window.location.href = APP_PATH + 'accessions'; },
-    description: "Go to browse accessions",
+    description: translate('browse_accessions'),
     condition: function () { return $('.browse-container a[href="' + APP_PATH + 'accessions' + '"]').length > 0; },
-    category: "Browse",
+    category: translate('category_browse'),
   });
 
   addBinding({
+    id: 'browse_subjects',
     keySequence: ['g', 's'],
     handler: function () { window.location.href = APP_PATH + 'subjects'; },
-    description: "Go to browse subjects",
+    description: translate('browse_subjects'),
     condition: function () { return $('.browse-container a[href="' + APP_PATH + 'subjects' + '"]').length > 0; },
-    category: "Browse",
+    category: translate('category_browse'),
   });
 
   addBinding({
+    id: 'browse_agents',
     keySequence: ['g', 'g'],
     handler: function () { window.location.href = APP_PATH + 'agents'; },
-    description: "Go to browse agents",
+    description: translate('browse_agents'),
     condition: function () { return $('.browse-container a[href="' + APP_PATH + 'agents' + '"]').length > 0; },
-    category: "Browse",
+    category: translate('category_browse'),
   });
 
   addBinding({
+    id: 'browse_digital_objects',
     keySequence: ['g', 'd'],
     handler: function () { window.location.href = APP_PATH + 'digital_objects'; },
-    description: "Go to browse digital objects",
+    description: translate('browse_digital_objects'),
     condition: function () { return $('.browse-container a[href="' + APP_PATH + 'digital_objects' + '"]').length > 0; },
-    category: "Browse",
+    category: translate('category_browse'),
   });
 
   addBinding({
+    id: 'manage_top_containers',
     keySequence: ['g', 't'],
     handler: function () { window.location.href = APP_PATH + 'top_containers'; },
-    description: "Go to Manage Top Containers",
+    description: translate('manage_top_containers'),
     condition: function () { return $('.repo-container a[href="' + APP_PATH + 'top_containers' + '"]').length > 0; },
-    category: "Browse",
+    category: translate('category_browse'),
   });
 
 
   /* Create things */
   addBinding({
+    id: 'create_resource',
     keySequence: ['c', 'r'],
     handler: function () { window.location.href = APP_PATH + 'resources/new'; },
-    description: "Create a resource",
+    description: translate('create_resource'),
     condition: function () { return $('.create-container a[href="' + APP_PATH + 'resources/new' + '"]').length > 0; },
-    category: "Create",
+    category: translate('category_create'),
   });
 
   addBinding({
+    id: 'create_accession',
     keySequence: ['c', 'a'],
     handler: function () { window.location.href = APP_PATH + 'accessions/new'; },
-    description: "Create a accession",
+    description: translate('create_accession'),
     condition: function () { return $('.create-container a[href="' + APP_PATH + 'accessions/new' + '"]').length > 0; },
-    category: "Create",
+    category: translate('category_create'),
   });
 
   addBinding({
+    id: 'create_subject',
     keySequence: ['c', 's'],
     handler: function () { window.location.href = APP_PATH + 'subjects/new'; },
-    description: "Create a subject",
+    description: translate('create_subject'),
     condition: function () { return $('.create-container a[href="' + APP_PATH + 'subjects/new' + '"]').length > 0; },
-    category: "Create",
+    category: translate('category_create'),
   });
 
   addBinding({
+    id: 'create_person',
     keySequence: ['c', 'p'],
     handler: function () { window.location.href = APP_PATH + 'agents/agent_person/new'; },
-    description: "Create a person",
+    description: translate('create_person'),
     condition: function () { return $('.create-container a[href="' + APP_PATH + 'agents/agent_person/new' + '"]').length > 0; },
-    category: "Create",
+    category: translate('category_create'),
   });
 
   addBinding({
+    id: 'create_corporate',
     keySequence: ['c', 'b'],
     handler: function () { window.location.href = APP_PATH + 'agents/agent_corporate_entity/new'; },
-    description: "Create a corporate body entity",
+    description: translate('create_corporate'),
     condition: function () { return $('.create-container a[href="' + APP_PATH + 'agents/agent_corporate_entity/new' + '"]').length > 0; },
-    category: "Create",
+    category: translate('category_create'),
   });
 
   addBinding({
+    id: 'create_family',
     keySequence: ['c', 'f'],
     handler: function () { window.location.href = APP_PATH + 'agents/agent_family/new'; },
-    description: "Create a family",
+    description: translate('create_family'),
     condition: function () { return $('.create-container a[href="' + APP_PATH + 'agents/agent_family/new' + '"]').length > 0; },
-    category: "Create",
+    category: translate('category_create'),
   });
 
   addBinding({
+    id: 'create_digital_object',
     keySequence: ['c', 'd'],
     handler: function () { window.location.href = APP_PATH + 'digital_objects/new'; },
-    description: "Create a digital object",
+    description: translate('create_digital_object'),
     condition: function () { return $('.create-container a[href="' + APP_PATH + 'digital_objects/new' + '"]').length > 0; },
-    category: "Create",
+    category: translate('category_create'),
   });
 
   addBinding({
+    id: 'focus_form',
     keySequence: ['Control-e', 'f'],
     handler: function () {
       return $('form.aspace-record-form .record-pane :input:visible').first().focus();
     },
-    description: "Focus the first field in the edit form",
+    description: translate('focus_form'),
     condition: function () {
       return $('form.aspace-record-form .record-pane :input:visible').length > 0;
     },
-    category: "Edit",
+    category: translate('category_edit'),
   });
 
   addBinding({
+    id: 'date_subrecord',
     keySequence: ['Control-e', 'd'],
     handler: function () {
       $('form.aspace-record-form section[data-object-name="date"] .subrecord-form-heading .btn')[0].click();
       focusSubrecordIfNeeded();
     },
-    description: "Add a date subrecord",
+    description: translate('date_subrecord'),
     condition: function () {
       return $('form.aspace-record-form section[data-object-name="date"] .subrecord-form-heading .btn').length > 0;
     },
-    category: "Edit",
+    category: translate('category_edit'),
   });
 
   addBinding({
+    id: 'extent_subrecord',
     keySequence: ['Control-e', 'e'],
     handler: function () {
       $('form.aspace-record-form section[data-object-name="extent"] .subrecord-form-heading .btn')[0].click();
       focusSubrecordIfNeeded();
     },
-    description: "Add a extent subrecord",
+    description: translate('extent_subrecord'),
     condition: function () {
       return $('form.aspace-record-form section[data-object-name="extent"] .subrecord-form-heading .btn').length > 0;
     },
-    category: "Edit",
+    category: translate('category_edit'),
   });
 
   addBinding({
+    id: 'agent_subrecord',
     keySequence: ['Control-e', 'l'],
     handler: function () {
       $('form.aspace-record-form section[data-object-name="linked_agent"] .subrecord-form-heading .btn')[0].click();
       focusSubrecordIfNeeded();
     },
-    description: "Add agent link subrecord",
+    description: translate('agent_subrecord'),
     condition: function () {
       return $('form.aspace-record-form section[data-object-name="linked_agent"] .subrecord-form-heading .btn').length > 0;
     },
-    category: "Edit",
+    category: translate('category_edit'),
   });
 
   addBinding({
+    id: 'subject_subrecord',
     keySequence: ['Control-e', 's'],
     handler: function () {
       $('form.aspace-record-form section[data-object-name="subject"] .subrecord-form-heading .btn')[0].click();
       focusSubrecordIfNeeded();
     },
-    description: "Add subject subrecord",
+    description: translate('subject_subrecord'),
     condition: function () {
       return $('form.aspace-record-form section[data-object-name="subject"] .subrecord-form-heading .btn').length > 0;
     },
-    category: "Edit",
+    category: translate('category_edit'),
   });
 
   addBinding({
+    id: 'remove_subrecord',
     keySequence: ['Control-e', 'k'],
     handler: function () {
       $(':focus').closest('.subrecord-form-fields').prev('.subrecord-form-remove')[0].click();
     },
-    description: "Remove current subrecord",
+    description: translate('remove_subrecord'),
     condition: function () {
       return $(':focus').closest('.subrecord-form-fields').prev('.subrecord-form-remove').length > 0;
     },
-    category: "Edit",
+    category: translate('category_edit'),
   });
 
   addBinding({
+    id: 'external_document_subrecord',
     keySequence: ['Control-e', 'x'],
     handler: function () {
       $('form.aspace-record-form section[data-object-name="external_document"] .subrecord-form-heading .btn')[0].click();
       focusSubrecordIfNeeded();
     },
-    description: "Add external document subrecord",
+    description: translate('external_document_subrecord'),
     condition: function () {
       return $('form.aspace-record-form section[data-object-name="external_document"] .subrecord-form-heading .btn').length > 0;
     },
-    category: "Edit",
+    category: translate('category_edit'),
   });
 
   addBinding({
+    id: 'container_instance_subrecord',
     keySequence: ['Control-e', 'c'],
     handler: function () {
       $('form.aspace-record-form section[data-object-name="instance"] .subrecord-form-heading .btn')[0].click();
       focusSubrecordIfNeeded();
     },
-    description: "Add container instance subrecord",
+    description: translate('container_instance_subrecord'),
     condition: function () {
       return $('form.aspace-record-form section[data-object-name="instance"] .subrecord-form-heading .btn').length > 0;
     },
-    category: "Edit",
+    category: translate('category_edit'),
   });
 
   addBinding({
+    id: 'digital_object_instance_subrecord',
     keySequence: ['Control-e', 'o'],
     handler: function () {
       $('form.aspace-record-form section[data-object-name="instance"] .subrecord-form-heading .btn')[1].click();
       focusSubrecordIfNeeded();
     },
-    description: "Add digital object instance subrecord",
+    description: translate('digital_object_instance_subrecord'),
     condition: function () {
       return $('form.aspace-record-form section[data-object-name="instance"] .subrecord-form-heading .btn').length > 1;
     },
-    category: "Edit",
+    category: translate('category_edit'),
   });
 
   addBinding({
+    id: 'note_subrecord',
     keySequence: ['Control-e', 'n'],
     handler: function () {
       $('form.aspace-record-form #notes .subrecord-form-heading .add-note')[1].click();
       focusSubrecordIfNeeded();
     },
-    description: "Add note subrecord",
+    description: translate('note_subrecord'),
     condition: function () {
       return $('form.aspace-record-form #notes .subrecord-form-heading .add-note').length > 0;
     },
-    category: "Edit",
+    category: translate('category_edit'),
   });
 
   addBinding({
+    id: 'add_event',
     keySequence: ['Control-e', 'v'],
     handler: function () {
       $('#add-event-dropdown .btn')[1].click();
     },
-    description: "Add event",
+    description: translate('add_event'),
     condition: function () {
       return $('#add-event-dropdown .btn').length > 0;
     },
-    category: "Edit",
+    category: translate('category_edit'),
   });
 
   addBinding({
+    id: 'add_assessment',
     keySequence: ['Control-e', 'a'],
     handler: function () {
       var record_specific_link = $('a[href*="assessments/new?record_uri"]');
@@ -684,46 +722,49 @@ $(function () {
         window.location.href = $('a[href*="assessments/new"]').attr('href');
       }
     },
-    description: "Add assessment",
+    description: translate('add_assessment'),
     condition: function () {
-      return $('a[href*="assessments/new"]').length > 0
+      return $('a[href*="assessments/new"]').length > 0;
     },
-    category: "Edit",
+    category: translate('category_edit'),
   });
 
   addBinding({
+    id: 'save_record',
     keySequence: ['Control-s'],
     handler: function () {
       $('form.aspace-record-form .form-actions button.btn-primary').click();
     },
-    description: "Save the record being edited",
+    description: translate('save_record'),
     condition: function () {
       return $('form.aspace-record-form .form-actions button.btn-primary').length > 0;
     },
-    category: "Edit",
+    category: translate('category_edit'),
   });
 
   addBinding({
+    id: 'close_record',
     keySequence: ['Control-k'],
     handler: function () {
       $('form.aspace-record-form .form-actions .btn-cancel')[0].click();
     },
-    description: "Close a record being edited",
+    description: translate('close_record'),
     condition: function () {
       return $('form.aspace-record-form .form-actions .btn-cancel').length > 0;
     },
-    category: "Edit",
+    category: translate('category_edit'),
   });
 
   addBinding({
+    id: 'become_admin',
     keySequence: ['i', 'd', 'd', 'q', 'd'],
     handler: function () {
       setTimeout(function () {
         window.alert("Nice try.");
       }, 200);
     },
-    description: "Become admin",
-    category: "Miscellaneous",
+    description: translate('become_admin'),
+    category: translate('category_miscellaneous'),
   });
 
   /*** End of default keyboard shortcut definitions ***/

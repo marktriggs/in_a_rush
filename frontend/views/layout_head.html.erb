@@ -1,2 +1,6 @@
+<script>
+ var IN_A_RUSH_TRANSLATIONS = <%== ASUtils.to_json(I18n.backend.send(:translations)[I18n.locale][:plugins][:in_a_rush]) %>;
+</script>
+
 <%= javascript_include_tag "#{@base_url}/assets/in_a_rush.js?_t=1527228931" %>
 <link href="<%= "#{AppConfig[:frontend_proxy_prefix]}assets/styles/in_a_rush.css?_t=1527228931" %>" media="all" rel="stylesheet" type="text/css">
