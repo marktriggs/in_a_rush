@@ -1,406 +1,476 @@
+window.InARush = {};
+
 $(function () {
 
   "use strict";
 
-  /* Keys pressed that aren't a complete command */
+  /* Keys pressed that aren't yet a complete command */
   var pendingKeystrokes = [];
 
   /* Registered key bindings */
   var bindings = [];
-
-  /* Clear existing ArchivesSpace shortcuts.  If this plugin ever gets merged,
-  we could just remove them from utils.js and form.js and wouldn't need this. */
-  var clearExistingShortcuts = function () {
-    if ($._data(document).events.keydown) {
-      $.each($._data(document).events.keydown.slice(), function (idx, event) {
-        if (event.data && event.data.keys) {
-          $(document).off('keydown', event.handler);
-        }
-      });
-    }
-
-    if ($._data(window).events.keydown) {
-      $.each($._data(window).events.keydown.slice(), function (idx, event) {
-        $(window).off('keydown', event.handler);
-      });
-    }
-  };
-
-  clearExistingShortcuts();
-  /* We need to clear shortcuts whenever the form changes because they get
-     re-established! */
-  $('form').on('formchanged.aspace', clearExistingShortcuts);
-  /* End of shortcut clearning nonsense */
 
 
   var translate = function(s) {
     return (IN_A_RUSH_TRANSLATIONS[s] || s);
   };
 
-
-  /* Parse a string like 'Control-c' into our canonical representation. */
-  var parseKeyString = function (input) {
-    var modifiers = [];
-    var key = undefined;
-
-    var meta_pattern = /(Control|Alt|Meta)-/g;
-
-    var lastIndex = 0;
-    while (true) {
-      var match = meta_pattern.exec(input);
-
-      if (match) {
-        lastIndex = meta_pattern.lastIndex;
-        modifiers.push(match[1]);
-      } else {
-        key = input.substr(lastIndex);
-        break;
-      }
-    }
-
-    if (key.length != 1 && key !== "Escape") {
-      throw("Failed to parse keyboard shortcut: " + input);
-    }
-
-    return {
-      key: key,
-      modifiers: modifiers.sort(),
-    };
-  };
-
-  /* Parse a keydown event into our canonical representation. */
-  var parseKeydown = function (event) {
-    var modifiers = [];
-
-    if (event.ctrlKey)  { modifiers.push("Control"); }
-    if (event.altKey)   { modifiers.push("Alt");     }
-    if (event.metaKey)  { modifiers.push("Meta");    }
-
-    return {
-      key: event.key,
-      modifiers: modifiers.sort(),
-    };
-  };
-
-  /* Turn our canonical representation of a keystroke back into a string. */
-  var toKeyString = function (parsedKey) {
-    var modifiers = parsedKey.modifiers.join('-');
-
-    if (modifiers.length > 0) {
-      return modifiers + '-' + parsedKey.key;
-    } else {
-      return parsedKey.key;
-    }
-  };
-
-  /* Clear our currently focused search item. */
-  var clearFocus = function () {
-    $('.in-a-rush-focused').removeClass('in-a-rush-focused');
-  };
-
-  /* Focus the search box. */
-  var searchHandler = function () {
-    var selector = $('#global-search-box');
-
-    clearFocus();
-    selector.focus();
-  };
-
-/* Move between search results. */
-  var moveHandler = function (direction) {
-    var currentRow = $(':focus').closest('#tabledSearchResults tbody tr')[0];
-
-    var selector;
-    if (currentRow) {
-      selector = (direction > 0) ? $(currentRow).next() : $(currentRow).prev();
-
-      if (selector.length === 0) {
-        return;
-      }
-    } else {
-      selector = $('#tabledSearchResults tbody tr').first();
-    }
-
-    selector.find('.btn').first().focus();
-    clearFocus();
-    selector.addClass('in-a-rush-focused');
-  };
-
-  /* Show the help modal. */
-  var helpModalTemplate = $(
-    '<div class="container-fluid">' +
-    '  <table class="table">' +
-    '    <tbody>' +
-    '        <tr style="display: none" class="template-row">' +
-    '          <td class="description"></td>' +
-    '          <td class="shortcut"></td>' +
-    '        </tr>' +
-    '    </tbody>' +
-    '  </table>' +
-    '</div>');
-
-  var showHelpModal = function () {
-    $('#inARushHelp').modal('hide').data('bs.modal', null);
-
-    var lastHeader = undefined;
-    var content = helpModalTemplate.clone();
-    var tbody = content.find('tbody');
-    var template_row = content.find('.template-row');
-
-    $.each(bindings, function (idx, binding_def) {
-      var disabled = !binding_def.condition();
-
-      if (!lastHeader || lastHeader != binding_def.category) {
-        var header = template_row.clone().removeClass().addClass('shortcut-header');
-        var td = $('<td class="shortcut-category" colspan="2" />');
-        td.text(binding_def.category);
-
-        header.addClass('bg-info font-weight-bold');
-        header.empty().append(td);
-        header.show();
-
-        tbody.append(header);
-        lastHeader = binding_def.category;
+  var ArchivesSpaceCompatibility = {
+    /* Clear existing ArchivesSpace shortcuts.  If this plugin ever gets merged,
+       we could just remove them from utils.js and form.js and wouldn't need this. */
+    clearExistingShortcuts: function () {
+      if ($._data(document).events.keydown) {
+        $.each($._data(document).events.keydown.slice(), function (idx, event) {
+          if (event.data && event.data.keys) {
+            $(document).off('keydown', event.handler);
+          }
+        });
       }
 
-
-      var row = template_row.clone().removeClass().addClass('shortcut-row');
-      row.addClass(disabled ? 'inactive-shortcut-row' : 'active-shortcut-row');
-
-      row.attr('key-sequence', binding_def.keySequence.join(' '));
-      var shortcutKeys = $('<span>');
-
-      $.each(binding_def.keySequence, function (idx, key) {
-        shortcutKeys.append($('<span class="shortcut-key" />').text(key));
-      });
-
-      row.find('.description').text(binding_def.description);
-      row.find('.shortcut').append(shortcutKeys);
-      row.show();
-
-      tbody.append(row);
-    });
-
-    AS.openCustomModal('inARushHelp',
-                       translate('keyboard_shortcuts'),
-                       content.html(),
-                       'large');
+      if ($._data(window).events.keydown) {
+        $.each($._data(window).events.keydown.slice(), function (idx, event) {
+          $(window).off('keydown', event.handler);
+        });
+      }
+    },
   };
 
+  var KeyParsing = {
+    /* Parse a string like 'Control-c' into our canonical representation. */
+    parseKeyString: function (input) {
+      var modifiers = [];
+      var key = undefined;
 
-  /* If a partial key sequence was entered while the help modal is up, highlight
-     the matching keys. */
-  var updateHelpModal = function () {
-    var modal = $('#inARushHelp');
+      var meta_pattern = /(Control|Alt|Meta)-/g;
 
-    if (modal.length === 0) {
-      return;
-    }
+      var lastIndex = 0;
+      while (true) {
+        var match = meta_pattern.exec(input);
 
-    modal.find('.shortcut-entered').removeClass('shortcut-entered');
-
-    if (pendingKeystrokes.length === 0) {
-      return;
-    }
-
-    var partialKeySequence = pendingKeystrokes.map(toKeyString).join(' ');
-
-    $('tr.active-shortcut-row').each(function (idx, row) {
-      if ($(row).attr('key-sequence').startsWith(partialKeySequence)) {
-        $(row).find('.shortcut-key').slice(0, pendingKeystrokes.length).addClass('shortcut-entered');
-      }
-    });
-  };
-
-  var updateKeystrokeIndicator = function () {
-    if ($('#inARushHelp:visible').length > 0 || pendingKeystrokes.length === 0) {
-      /* If the help is shown, or there are no keystrokes to show, don't show
-         the keystroke indicator. */
-      $('#inARushIndicator').attr('id', null).fadeOut(500, function () {
-        $(this).remove()
-      });
-      return;
-    }
-
-    var indicator = $('#inARushIndicator');
-
-    if (indicator.length === 0) {
-      indicator = $('<div id="inARushIndicator" class="in-a-rush-keystroke-indicator" />');
-      $(document.body).append(indicator);
-    }
-
-    /* No need to re-render our existing keys */
-    var existingKeys = indicator.find('.shortcut-key');
-    var existingKeyCount = existingKeys.length;
-
-    existingKeys.removeClass('shortcut-entered');
-
-    var keyElt = undefined;
-
-    $.each(pendingKeystrokes, function (idx, key) {
-      if (idx >= existingKeyCount) {
-        keyElt = $('<div class="shortcut-key" />').text(toKeyString(key));
-        indicator.append(keyElt);
-      }
-    });
-
-
-    /* Animate the CSS class change of the last entered key for prettiness. */
-    setTimeout(function () {
-      keyElt.addClass('shortcut-entered');
-    }, 0);
-  };
-
-  /* Add a new key binding */
-  var addBinding = function(def) {
-    /* Normalise our sequence */
-    if (!def.condition) {
-      def.condition = function () { return true; };
-    }
-
-    def.parsedSequence = def.keySequence.map(parseKeyString);
-    bindings.push(def);
-  };
-
-  /* Handle a keydown event */
-  var handleKeypress = function (event) {
-    if (!event.ctrlKey && pendingKeystrokes.length === 0) {
-      if ($.inArray(event.target.tagName, ['INPUT', 'TEXTAREA', 'SELECT']) >= 0 ||
-          event.target.isContentEditable) {
-        /* Leave it alone */
-        return true;
-      }
-    }
-
-    var key = parseKeydown(event);
-
-    if ($.inArray(key.key, key.modifiers) >= 0) {
-      /* A keydown event for a single modifier like 'Control'.  We don't care
-      about those in isolation, so skip this event. */
-      return true;
-    }
-
-    /* If the first keystroke included a Control modifier, ignore the modifiers
-       on subsequent keystrokes.  This allows a binding like `Control-e e` to be
-       entered as `Control-e Control-e`, which can be more kind to people's
-       fingers. */
-    if (pendingKeystrokes.length > 0 &&
-        $.inArray('Control', pendingKeystrokes[0].modifiers) >= 0) {
-      key.modifiers = [];
-    }
-
-    pendingKeystrokes.push(key);
-
-    var matchedBinding = undefined;
-    var partialMatch = false;
-
-    $.each(bindings, function (idx, binding_def) {
-      if (binding_def.parsedSequence.map(toKeyString).join(' ') === pendingKeystrokes.map(toKeyString).join(' ')) {
-        /* exact match */
-        matchedBinding = binding_def;
-        return;
-      }
-
-      var prefixMatched = true;
-      $.each(pendingKeystrokes, function (idx, key) {
-        if (idx < binding_def.parsedSequence.length && toKeyString(key) === toKeyString(binding_def.parsedSequence[idx])) {
-          /* OK */
+        if (match) {
+          lastIndex = meta_pattern.lastIndex;
+          modifiers.push(match[1]);
         } else {
-          prefixMatched = false;
+          key = input.substr(lastIndex);
+          break;
+        }
+      }
+
+      return {
+        key: key,
+        modifiers: modifiers.sort(),
+      };
+    },
+
+    /* Parse a keydown event into our canonical representation. */
+    parseKeydown: function (event) {
+      var modifiers = [];
+
+      if (event.ctrlKey)  { modifiers.push("Control"); }
+      if (event.altKey)   { modifiers.push("Alt");     }
+      if (event.metaKey)  { modifiers.push("Meta");    }
+
+      return {
+        key: event.key,
+        modifiers: modifiers.sort(),
+      };
+    },
+
+    /* Turn our canonical representation of a keystroke back into a string. */
+    toKeyString: function (parsedKey) {
+      var modifiers = parsedKey.modifiers.join('-');
+
+      if (modifiers.length > 0) {
+        return modifiers + '-' + parsedKey.key;
+      } else {
+        return parsedKey.key;
+      }
+    },
+  };
+
+
+  var FormNavigation = {
+    /* Clear our currently focused search item. */
+    clearFocus: function () {
+      $('.in-a-rush-focused').removeClass('in-a-rush-focused');
+    },
+
+    /* Focus the search box. */
+    searchHandler: function () {
+      var selector = $('#global-search-box');
+
+      FormNavigation.clearFocus();
+      selector.focus();
+    },
+
+    /* Move between search results. */
+    moveHandler: function (direction) {
+      var currentRow = $(':focus').closest('#tabledSearchResults tbody tr')[0];
+
+      var selector;
+      if (currentRow) {
+        selector = (direction > 0) ? $(currentRow).next() : $(currentRow).prev();
+
+        if (selector.length === 0) {
           return;
+        }
+      } else {
+        selector = $('#tabledSearchResults tbody tr').first();
+      }
+
+      selector.find('.btn').first().focus();
+      FormNavigation.clearFocus();
+      selector.addClass('in-a-rush-focused');
+    },
+
+    focusSubrecordIfNeeded: function () {
+      var subrecord = $(':focus').closest('.subrecord-form-fields');
+
+      if (subrecord.length !== 1) {
+        return;
+      }
+
+      var offset = subrecord[0].getBoundingClientRect();
+      var viewportHeight = (window.innerHeight || document. documentElement.clientHeight);
+
+      if (offset.top < 0 || offset.bottom > viewportHeight) {
+        $(window).scrollTo(subrecord, 500);
+      }
+    },
+  };
+
+
+  var Help = {
+    modalId: 'InARushHelp',
+    indicatorId: 'InARushIndicator',
+
+    helpModalTemplate: $(
+      '<div class="container-fluid">' +
+      '  <table class="table">' +
+      '    <tbody>' +
+      '        <tr style="display: none" class="template-row">' +
+      '          <td class="description"></td>' +
+      '          <td class="shortcut"></td>' +
+      '        </tr>' +
+      '    </tbody>' +
+      '  </table>' +
+      '</div>'),
+
+    /* Show the help modal. */
+    showHelpModal: function () {
+      $('#' + Help.modalId).modal('hide').data('bs.modal', null);
+
+      var lastHeader = undefined;
+      var content = Help.helpModalTemplate.clone();
+      var tbody = content.find('tbody');
+      var template_row = content.find('.template-row');
+
+      $.each(bindings, function (idx, binding_def) {
+        var disabled = !binding_def.condition();
+
+        if (!lastHeader || lastHeader != binding_def.category) {
+          var header = template_row.clone().removeClass().addClass('shortcut-header');
+          var td = $('<td class="shortcut-category" colspan="2" />');
+          td.text(binding_def.category);
+
+          header.addClass('bg-info font-weight-bold');
+          header.empty().append(td);
+          header.show();
+
+          tbody.append(header);
+          lastHeader = binding_def.category;
+        }
+
+        var row = template_row.clone().removeClass().addClass('shortcut-row');
+        row.addClass(disabled ? 'inactive-shortcut-row' : 'active-shortcut-row');
+
+        row.attr('key-sequence', binding_def.keySequence.join(' '));
+        var shortcutKeys = $('<span>');
+
+        $.each(binding_def.keySequence, function (idx, key) {
+          shortcutKeys.append($('<span class="shortcut-key" />').text(key));
+        });
+
+        row.find('.description').text(binding_def.description);
+        row.find('.shortcut').append(shortcutKeys);
+        row.show();
+
+        tbody.append(row);
+      });
+
+      AS.openCustomModal(Help.modalId,
+                         translate('keyboard_shortcuts'),
+                         content.html(),
+                         'large');
+    },
+
+    /* If a partial key sequence was entered while the help modal is up, highlight
+       the matching keys. */
+    updateHelpModal: function () {
+      var modal = $('#' + Help.modalId);
+
+      if (modal.length === 0) {
+        return;
+      }
+
+      modal.find('.shortcut-entered').removeClass('shortcut-entered');
+
+      if (pendingKeystrokes.length === 0) {
+        return;
+      }
+
+      var partialKeySequence = pendingKeystrokes.map(KeyParsing.toKeyString).join(' ');
+
+      $('tr.active-shortcut-row').each(function (idx, row) {
+        if ($(row).attr('key-sequence').startsWith(partialKeySequence)) {
+          $(row).find('.shortcut-key').slice(0, pendingKeystrokes.length).addClass('shortcut-entered');
+        }
+      });
+    },
+
+    updateKeystrokeIndicator: function () {
+      if ($('#' + Help.modalId + ':visible').length > 0 || pendingKeystrokes.length === 0) {
+        /* If the help is shown, or there are no keystrokes to show, don't show
+           the keystroke indicator. */
+        $('#' + Help.indicatorId).attr('id', null).fadeOut(500, function () {
+          $(this).remove();
+        });
+        return;
+      }
+
+      var indicator = $('#' + Help.indicatorId);
+
+      if (indicator.length === 0) {
+        indicator = $('<div id="' + Help.indicatorId + '" class="in-a-rush-keystroke-indicator" />');
+        $(document.body).append(indicator);
+      }
+
+      /* No need to re-render our existing keys */
+      var existingKeys = indicator.find('.shortcut-key');
+      var existingKeyCount = existingKeys.length;
+
+      existingKeys.removeClass('shortcut-entered');
+
+      var keyElt = undefined;
+
+      $.each(pendingKeystrokes, function (idx, key) {
+        if (idx >= existingKeyCount) {
+          keyElt = $('<div class="shortcut-key" />').text(KeyParsing.toKeyString(key));
+          indicator.append(keyElt);
         }
       });
 
-      if (!partialMatch) {
-        partialMatch = prefixMatched;
+
+      /* Animate the CSS class change of the last entered key for prettiness. */
+      setTimeout(function () {
+        keyElt.addClass('shortcut-entered');
+      }, 0);
+    },
+  };
+
+  var Bindings = {
+    /* Add a new key binding */
+    addBinding: function(def) {
+      /* Normalise our sequence */
+      if (!def.condition) {
+        def.condition = function () { return true; };
       }
-    });
 
-    updateHelpModal();
+      var binding_ok = true;
+      $.each(['id', 'category', 'description', 'handler', 'keySequence'], function (idx, attr) {
+        if (!def[attr]) {
+          console.log("Your key binding is missing an '" + attr + "' attribute", def);
+          binding_ok = false;
+        }
+      });
 
-    if (partialMatch || (matchedBinding && matchedBinding.condition())) {
-      updateKeystrokeIndicator();
-    }
+      if (!binding_ok) {
+        return;
+      }
 
-    if (partialMatch) {
-      event.preventDefault();
-      event.stopPropagation();
-      return false;
-    }
+      def.parsedSequence = def.keySequence.map(KeyParsing.parseKeyString);
+      bindings.push(def);
+    },
 
-    pendingKeystrokes = [];
+    rebind: function(binding_id, new_shortcut) {
+      $.each(bindings, function (idx, binding_def) {
+        if (binding_def.id == binding_id) {
+          binding_def.keySequence = new_shortcut;
+          binding_def.parsedSequence = new_shortcut.map(KeyParsing.parseKeyString);
+          return false;
+        }
+      });
+    },
 
-    if (matchedBinding) {
-      if (!matchedBinding.condition()) {
-        /* This keybinding isn't applicable in this context. */
-        updateKeystrokeIndicator();
+    exactMatch: function (keyseq1, keyseq2) {
+      return keyseq1.map(KeyParsing.toKeyString).join(' ') === keyseq2.map(KeyParsing.toKeyString).join(' ');
+    },
+
+    hasPrefix: function (keyseq, candidatePrefix) {
+      var result = true;
+
+      $.each(candidatePrefix, function (idx, key) {
+        if (idx < keyseq.length && KeyParsing.toKeyString(key) === KeyParsing.toKeyString(keyseq[idx])) {
+          /* OK */
+        } else {
+          result = false;
+          return false;
+        }
+      });
+
+      return result;
+    },
+
+    /* Handle a keydown event */
+    handleKeypress: function (event) {
+      if (!event.ctrlKey && pendingKeystrokes.length === 0) {
+        if ($.inArray(event.target.tagName, ['INPUT', 'TEXTAREA', 'SELECT']) >= 0 ||
+            event.target.isContentEditable) {
+          /* Leave it alone */
+          return true;
+        }
+      }
+
+      var key = KeyParsing.parseKeydown(event);
+
+      if ($.inArray(key.key, key.modifiers) >= 0) {
+        /* A keydown event for a single modifier like 'Control'.  We don't care
+           about those in isolation, so skip this event. */
         return true;
       }
 
-      if (matchedBinding.handler) {
-        var delay = 0;
+      /* If the first keystroke included a Control modifier, ignore the modifiers
+         on subsequent keystrokes.  This allows a binding like `Control-e e` to be
+         entered as `Control-e Control-e`, which can be more kind to people's
+         fingers. */
+      if (pendingKeystrokes.length > 0 &&
+          $.inArray('Control', pendingKeystrokes[0].modifiers) >= 0) {
+        key.modifiers = [];
+      }
+
+      pendingKeystrokes.push(key);
+
+      var matchedBinding = undefined;
+      var partialMatch = false;
+
+      /* Attempt to match the keys typed so far to one of our bindings.  Either
+         nothing matches, or we get an exact match, or we get a partial (prefix)
+         match. */
+      $.each(bindings, function (idx, binding_def) {
+        if (Bindings.exactMatch(binding_def.parsedSequence, pendingKeystrokes)) {
+          matchedBinding = binding_def;
+          return;
+        }
+
+        if (Bindings.hasPrefix(binding_def.parsedSequence, pendingKeystrokes)) {
+          partialMatch = true;
+        }
+      });
+
+      /* Render the new keystroke if the help modal is active. */
+      Help.updateHelpModal();
+
+      /* ... and if it's not, show the keystroke indicator */
+      if (partialMatch || (matchedBinding && matchedBinding.condition())) {
+        Help.updateKeystrokeIndicator();
+      }
+
+      if (partialMatch) {
+        event.preventDefault();
+        event.stopPropagation();
+        return false;
+      }
+
+      /* If we make it to here, either we got an exact match or no match at all.
+         In either case, we're done with the pending keystrokes. */
+      pendingKeystrokes = [];
+
+      if (matchedBinding) {
+        /* Process our exact match */
+        if (!matchedBinding.condition()) {
+          /* This keybinding isn't applicable in this context. */
+          Help.updateKeystrokeIndicator();
+          return true;
+        }
 
         /* Small detail: if we're showing the help, give a moment for the final
            key to light up before we dismiss the modal.  Just for the look of the
            thing. */
-        if ($('#inARushHelp').length > 0) {
-          delay = 200;
-        }
+        var delay = ($('#' + Help.modalId).length > 0) ? 200 : 0;
 
         setTimeout(function () {
-          $('#inARushHelp').modal('hide').data('bs.modal', null);
+          $('#' + Help.modalId).modal('hide').data('bs.modal', null);
           matchedBinding.handler();
-          updateKeystrokeIndicator();
+          Help.updateKeystrokeIndicator();
         }, delay);
 
         event.preventDefault();
         event.stopPropagation();
         return false;
+      } else {
+        /* No match.  Let the keystroke through (maybe someone else cares) */
+        Help.updateKeystrokeIndicator();
+        return true;
       }
-    }
-
-    updateKeystrokeIndicator();
-    return true;
+    },
   };
 
-  var focusSubrecordIfNeeded = function () {
-    var subrecord = $(':focus').closest('.subrecord-form-fields');
+  /*** Event listeners ***/
+  document.addEventListener('focusout', function (event) {
+    FormNavigation.clearFocus();
+  });
 
-    if (subrecord.length !== 1) {
-      return;
+  document.addEventListener('keydown', function (event) {
+    if (event.key == '?') {
+      pendingKeystrokes = [];
+      Help.updateKeystrokeIndicator();
+      Help.showHelpModal();
+      return true;
     }
 
-    var offset = subrecord[0].getBoundingClientRect();
-    var viewportHeight = (window.innerHeight || document. documentElement.clientHeight);
-
-    if (offset.top < 0 || offset.bottom > viewportHeight) {
-      $(window).scrollTo(subrecord, 500);
+    if (event.key == 'Escape') {
+      pendingKeystrokes = [];
+      Help.updateKeystrokeIndicator();
+      return true;
     }
-  };
+
+    return Bindings.handleKeypress(event);
+  });
+
+  /* We need to clear shortcuts whenever the form changes because they get
+     re-established! */
+  ArchivesSpaceCompatibility.clearExistingShortcuts();
+  $('form').on('formchanged.aspace', ArchivesSpaceCompatibility.clearExistingShortcuts);
+
+
+  /*** Exports ***/
+  InARush.KeyParsing = KeyParsing;
+  InARush.FormNavigation = FormNavigation;
+  InARush.Help = Help;
+  InARush.Bindings = Bindings;
+
 
   /*** Default keyboard shortcut definitions!  ***/
-
-  /* FIXME: We'll need to i18n strings here. */
-  addBinding({
+  Bindings.addBinding({
     id: 'shortcut_reference',
     keySequence: ['?'],
-    handler: showHelpModal,
+    handler: Help.showHelpModal,
     description: translate('shortcut_reference'),
     category: translate('category_help'),
   });
 
-  addBinding({
+  Bindings.addBinding({
     id: 'close_modal',
     keySequence: ['Escape'],
-    handler: undefined,
+    handler: function () {},
     description: translate('close_modal'),
     category: translate('category_help'),
   });
 
-  addBinding({
+  Bindings.addBinding({
     id: 'go_to_search',
     keySequence: ['/'],
-    handler: searchHandler,
+    handler: FormNavigation.searchHandler,
     description: translate('go_to_search'),
     condition: function () {
       return $('#global-search-box').length > 0;
@@ -408,25 +478,25 @@ $(function () {
     category: translate('category_navigate'),
   });
 
-  addBinding({
+  Bindings.addBinding({
     id: 'next_search_result',
     keySequence: ['j'],
-    handler: function () { moveHandler(1); },
+    handler: function () { FormNavigation.moveHandler(1); },
     description: translate('next_search_result'),
     condition: function () { return $('#tabledSearchResults').length > 0; },
     category: translate('category_navigate'),
   });
 
-  addBinding({
+  Bindings.addBinding({
     id: 'prev_search_result',
     keySequence: ['k'],
-    handler: function () { moveHandler(-1); },
+    handler: function () { FormNavigation.moveHandler(-1); },
     description: translate('prev_search_result'),
     condition: function () { return $('#tabledSearchResults').length > 0; },
     category: translate('category_navigate'),
   });
 
-  addBinding({
+  Bindings.addBinding({
     id: 'open_browse_menu',
     keySequence: ['B'],
     handler: function () { $('li.browse-container a.dropdown-toggle').trigger('click.bs.dropdown'); },
@@ -435,7 +505,7 @@ $(function () {
     category: translate('category_navigate'),
   });
 
-  addBinding({
+  Bindings.addBinding({
     id: 'open_create_menu',
     keySequence: ['C'],
     handler: function () { $('li.create-container a.dropdown-toggle').trigger('click.bs.dropdown'); },
@@ -445,7 +515,7 @@ $(function () {
   });
 
   /* Browse things */
-  addBinding({
+  Bindings.addBinding({
     id: 'lassie_come_home',
     keySequence: ['g', 'h'],
     handler: function () { window.location.href = APP_PATH; },
@@ -453,7 +523,7 @@ $(function () {
     category: translate('category_browse'),
   });
 
-  addBinding({
+  Bindings.addBinding({
     id: 'browse_resources',
     keySequence: ['g', 'r'],
     handler: function () { window.location.href = APP_PATH + 'resources'; },
@@ -462,7 +532,7 @@ $(function () {
     category: translate('category_browse'),
   });
 
-  addBinding({
+  Bindings.addBinding({
     id: 'browse_accessions',
     keySequence: ['g', 'a'],
     handler: function () { window.location.href = APP_PATH + 'accessions'; },
@@ -471,7 +541,7 @@ $(function () {
     category: translate('category_browse'),
   });
 
-  addBinding({
+  Bindings.addBinding({
     id: 'browse_subjects',
     keySequence: ['g', 's'],
     handler: function () { window.location.href = APP_PATH + 'subjects'; },
@@ -480,7 +550,7 @@ $(function () {
     category: translate('category_browse'),
   });
 
-  addBinding({
+  Bindings.addBinding({
     id: 'browse_agents',
     keySequence: ['g', 'g'],
     handler: function () { window.location.href = APP_PATH + 'agents'; },
@@ -489,7 +559,7 @@ $(function () {
     category: translate('category_browse'),
   });
 
-  addBinding({
+  Bindings.addBinding({
     id: 'browse_digital_objects',
     keySequence: ['g', 'd'],
     handler: function () { window.location.href = APP_PATH + 'digital_objects'; },
@@ -498,7 +568,7 @@ $(function () {
     category: translate('category_browse'),
   });
 
-  addBinding({
+  Bindings.addBinding({
     id: 'manage_top_containers',
     keySequence: ['g', 't'],
     handler: function () { window.location.href = APP_PATH + 'top_containers'; },
@@ -509,7 +579,7 @@ $(function () {
 
 
   /* Create things */
-  addBinding({
+  Bindings.addBinding({
     id: 'create_resource',
     keySequence: ['c', 'r'],
     handler: function () { window.location.href = APP_PATH + 'resources/new'; },
@@ -518,7 +588,7 @@ $(function () {
     category: translate('category_create'),
   });
 
-  addBinding({
+  Bindings.addBinding({
     id: 'create_accession',
     keySequence: ['c', 'a'],
     handler: function () { window.location.href = APP_PATH + 'accessions/new'; },
@@ -527,7 +597,7 @@ $(function () {
     category: translate('category_create'),
   });
 
-  addBinding({
+  Bindings.addBinding({
     id: 'create_subject',
     keySequence: ['c', 's'],
     handler: function () { window.location.href = APP_PATH + 'subjects/new'; },
@@ -536,7 +606,7 @@ $(function () {
     category: translate('category_create'),
   });
 
-  addBinding({
+  Bindings.addBinding({
     id: 'create_person',
     keySequence: ['c', 'p'],
     handler: function () { window.location.href = APP_PATH + 'agents/agent_person/new'; },
@@ -545,7 +615,7 @@ $(function () {
     category: translate('category_create'),
   });
 
-  addBinding({
+  Bindings.addBinding({
     id: 'create_corporate',
     keySequence: ['c', 'b'],
     handler: function () { window.location.href = APP_PATH + 'agents/agent_corporate_entity/new'; },
@@ -554,7 +624,7 @@ $(function () {
     category: translate('category_create'),
   });
 
-  addBinding({
+  Bindings.addBinding({
     id: 'create_family',
     keySequence: ['c', 'f'],
     handler: function () { window.location.href = APP_PATH + 'agents/agent_family/new'; },
@@ -563,7 +633,7 @@ $(function () {
     category: translate('category_create'),
   });
 
-  addBinding({
+  Bindings.addBinding({
     id: 'create_digital_object',
     keySequence: ['c', 'd'],
     handler: function () { window.location.href = APP_PATH + 'digital_objects/new'; },
@@ -572,7 +642,7 @@ $(function () {
     category: translate('category_create'),
   });
 
-  addBinding({
+  Bindings.addBinding({
     id: 'focus_form',
     keySequence: ['Control-e', 'f'],
     handler: function () {
@@ -585,12 +655,12 @@ $(function () {
     category: translate('category_edit'),
   });
 
-  addBinding({
+  Bindings.addBinding({
     id: 'date_subrecord',
     keySequence: ['Control-e', 'd'],
     handler: function () {
       $('form.aspace-record-form section[data-object-name="date"] .subrecord-form-heading .btn')[0].click();
-      focusSubrecordIfNeeded();
+      FormNavigation.focusSubrecordIfNeeded();
     },
     description: translate('date_subrecord'),
     condition: function () {
@@ -599,12 +669,12 @@ $(function () {
     category: translate('category_edit'),
   });
 
-  addBinding({
+  Bindings.addBinding({
     id: 'extent_subrecord',
     keySequence: ['Control-e', 'e'],
     handler: function () {
       $('form.aspace-record-form section[data-object-name="extent"] .subrecord-form-heading .btn')[0].click();
-      focusSubrecordIfNeeded();
+      FormNavigation.focusSubrecordIfNeeded();
     },
     description: translate('extent_subrecord'),
     condition: function () {
@@ -613,12 +683,12 @@ $(function () {
     category: translate('category_edit'),
   });
 
-  addBinding({
+  Bindings.addBinding({
     id: 'agent_subrecord',
     keySequence: ['Control-e', 'l'],
     handler: function () {
       $('form.aspace-record-form section[data-object-name="linked_agent"] .subrecord-form-heading .btn')[0].click();
-      focusSubrecordIfNeeded();
+      FormNavigation.focusSubrecordIfNeeded();
     },
     description: translate('agent_subrecord'),
     condition: function () {
@@ -627,12 +697,12 @@ $(function () {
     category: translate('category_edit'),
   });
 
-  addBinding({
+  Bindings.addBinding({
     id: 'subject_subrecord',
     keySequence: ['Control-e', 's'],
     handler: function () {
       $('form.aspace-record-form section[data-object-name="subject"] .subrecord-form-heading .btn')[0].click();
-      focusSubrecordIfNeeded();
+      FormNavigation.focusSubrecordIfNeeded();
     },
     description: translate('subject_subrecord'),
     condition: function () {
@@ -641,7 +711,7 @@ $(function () {
     category: translate('category_edit'),
   });
 
-  addBinding({
+  Bindings.addBinding({
     id: 'remove_subrecord',
     keySequence: ['Control-e', 'k'],
     handler: function () {
@@ -654,12 +724,12 @@ $(function () {
     category: translate('category_edit'),
   });
 
-  addBinding({
+  Bindings.addBinding({
     id: 'external_document_subrecord',
     keySequence: ['Control-e', 'x'],
     handler: function () {
       $('form.aspace-record-form section[data-object-name="external_document"] .subrecord-form-heading .btn')[0].click();
-      focusSubrecordIfNeeded();
+      FormNavigation.focusSubrecordIfNeeded();
     },
     description: translate('external_document_subrecord'),
     condition: function () {
@@ -668,12 +738,12 @@ $(function () {
     category: translate('category_edit'),
   });
 
-  addBinding({
+  Bindings.addBinding({
     id: 'container_instance_subrecord',
     keySequence: ['Control-e', 'c'],
     handler: function () {
       $('form.aspace-record-form section[data-object-name="instance"] .subrecord-form-heading .btn')[0].click();
-      focusSubrecordIfNeeded();
+      FormNavigation.focusSubrecordIfNeeded();
     },
     description: translate('container_instance_subrecord'),
     condition: function () {
@@ -682,12 +752,12 @@ $(function () {
     category: translate('category_edit'),
   });
 
-  addBinding({
+  Bindings.addBinding({
     id: 'digital_object_instance_subrecord',
     keySequence: ['Control-e', 'o'],
     handler: function () {
       $('form.aspace-record-form section[data-object-name="instance"] .subrecord-form-heading .btn')[1].click();
-      focusSubrecordIfNeeded();
+      FormNavigation.focusSubrecordIfNeeded();
     },
     description: translate('digital_object_instance_subrecord'),
     condition: function () {
@@ -696,12 +766,12 @@ $(function () {
     category: translate('category_edit'),
   });
 
-  addBinding({
+  Bindings.addBinding({
     id: 'note_subrecord',
     keySequence: ['Control-e', 'n'],
     handler: function () {
       $('form.aspace-record-form #notes .subrecord-form-heading .add-note')[1].click();
-      focusSubrecordIfNeeded();
+      FormNavigation.focusSubrecordIfNeeded();
     },
     description: translate('note_subrecord'),
     condition: function () {
@@ -710,7 +780,7 @@ $(function () {
     category: translate('category_edit'),
   });
 
-  addBinding({
+  Bindings.addBinding({
     id: 'add_event',
     keySequence: ['Control-e', 'v'],
     handler: function () {
@@ -723,7 +793,7 @@ $(function () {
     category: translate('category_edit'),
   });
 
-  addBinding({
+  Bindings.addBinding({
     id: 'add_assessment',
     keySequence: ['Control-e', 'a'],
     handler: function () {
@@ -742,7 +812,7 @@ $(function () {
     category: translate('category_edit'),
   });
 
-  addBinding({
+  Bindings.addBinding({
     id: 'save_record',
     keySequence: ['Control-s'],
     handler: function () {
@@ -755,7 +825,7 @@ $(function () {
     category: translate('category_edit'),
   });
 
-  addBinding({
+  Bindings.addBinding({
     id: 'close_record',
     keySequence: ['Control-k'],
     handler: function () {
@@ -768,7 +838,7 @@ $(function () {
     category: translate('category_edit'),
   });
 
-  addBinding({
+  Bindings.addBinding({
     id: 'become_admin',
     keySequence: ['i', 'd', 'd', 'q', 'd'],
     handler: function () {
@@ -778,30 +848,5 @@ $(function () {
     },
     description: translate('become_admin'),
     category: translate('category_miscellaneous'),
-  });
-
-  /*** End of default keyboard shortcut definitions ***/
-
-
-  /* Event listeners */
-  document.addEventListener('focusout', function (event) {
-    clearFocus();
-  });
-
-  document.addEventListener('keydown', function (event) {
-    if (event.key == '?') {
-      pendingKeystrokes = [];
-      updateKeystrokeIndicator();
-      showHelpModal();
-      return true;
-    }
-
-    if (event.key == 'Escape') {
-      pendingKeystrokes = [];
-      updateKeystrokeIndicator();
-      return true;
-    }
-
-    return handleKeypress(event);
   });
 });
