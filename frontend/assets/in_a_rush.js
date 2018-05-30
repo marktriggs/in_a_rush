@@ -41,14 +41,14 @@ $(function () {
       var modifiers = [];
       var key = undefined;
 
-      var meta_pattern = /(Control|Alt|Meta)-/g;
+      var metaPattern = /(Control|Alt|Meta)-/g;
 
       var lastIndex = 0;
       while (true) {
-        var match = meta_pattern.exec(input);
+        var match = metaPattern.exec(input);
 
         if (match) {
-          lastIndex = meta_pattern.lastIndex;
+          lastIndex = metaPattern.lastIndex;
           modifiers.push(match[1]);
         } else {
           key = input.substr(lastIndex);
@@ -123,9 +123,9 @@ $(function () {
       selector.addClass('in-a-rush-focused');
     },
 
-    focusSubrecordIfNeeded: function (heading_elt) {
-      var subrecord = heading_elt ?
-                      $(heading_elt).next('.subrecord-form-container').find('.subrecord-form-fields').last() :
+    focusSubrecordIfNeeded: function (headingElt) {
+      var subrecord = headingElt ?
+                      $(headingElt).next('.subrecord-form-container').find('.subrecord-form-fields').last() :
                       $(':focus').closest('.subrecord-form-fields');
 
       if (subrecord.length !== 1) {
@@ -169,35 +169,35 @@ $(function () {
       var lastHeader = undefined;
       var content = Help.helpModalTemplate.clone();
       var tbody = content.find('tbody');
-      var template_row = content.find('.template-row');
+      var templateRow = content.find('.template-row');
 
-      $.each(bindings, function (idx, binding_def) {
-        var disabled = !binding_def.condition();
+      $.each(bindings, function (idx, bindingDef) {
+        var disabled = !bindingDef.condition();
 
-        if (!lastHeader || lastHeader != binding_def.category) {
-          var header = template_row.clone().removeClass().addClass('shortcut-header');
+        if (!lastHeader || lastHeader != bindingDef.category) {
+          var header = templateRow.clone().removeClass().addClass('shortcut-header');
           var td = $('<td class="shortcut-category" colspan="2" />');
-          td.text(binding_def.category);
+          td.text(bindingDef.category);
 
           header.addClass('bg-info font-weight-bold');
           header.empty().append(td);
           header.show();
 
           tbody.append(header);
-          lastHeader = binding_def.category;
+          lastHeader = bindingDef.category;
         }
 
-        var row = template_row.clone().removeClass().addClass('shortcut-row');
+        var row = templateRow.clone().removeClass().addClass('shortcut-row');
         row.addClass(disabled ? 'inactive-shortcut-row' : 'active-shortcut-row');
 
-        row.attr('key-sequence', binding_def.keySequence.join(' '));
+        row.attr('key-sequence', bindingDef.keySequence.join(' '));
         var shortcutKeys = $('<span>');
 
-        $.each(binding_def.keySequence, function (idx, key) {
+        $.each(bindingDef.keySequence, function (idx, key) {
           shortcutKeys.append($('<span class="shortcut-key" />').text(key));
         });
 
-        row.find('.description').text(binding_def.description);
+        row.find('.description').text(bindingDef.description);
         row.find('.shortcut').append(shortcutKeys);
         row.show();
 
@@ -282,15 +282,15 @@ $(function () {
         def.condition = function () { return true; };
       }
 
-      var binding_ok = true;
+      var bindingOk = true;
       $.each(['id', 'category', 'description', 'handler', 'keySequence'], function (idx, attr) {
         if (!def[attr]) {
           console.log("Your key binding is missing an '" + attr + "' attribute", def);
-          binding_ok = false;
+          bindingOk = false;
         }
       });
 
-      if (!binding_ok) {
+      if (!bindingOk) {
         return;
       }
 
@@ -298,11 +298,11 @@ $(function () {
       bindings.push(def);
     },
 
-    rebind: function(binding_id, new_shortcut) {
-      $.each(bindings, function (idx, binding_def) {
-        if (binding_def.id == binding_id) {
-          binding_def.keySequence = new_shortcut;
-          binding_def.parsedSequence = new_shortcut.map(KeyParsing.parseKeyString);
+    rebind: function(bindingId, newShortcut) {
+      $.each(bindings, function (idx, bindingDef) {
+        if (bindingDef.id == bindingId) {
+          bindingDef.keySequence = newShortcut;
+          bindingDef.parsedSequence = newShortcut.map(KeyParsing.parseKeyString);
           return false;
         }
       });
@@ -362,13 +362,13 @@ $(function () {
       /* Attempt to match the keys typed so far to one of our bindings.  Either
          nothing matches, or we get an exact match, or we get a partial (prefix)
          match. */
-      $.each(bindings, function (idx, binding_def) {
-        if (Bindings.exactMatch(binding_def.parsedSequence, pendingKeystrokes)) {
-          matchedBinding = binding_def;
+      $.each(bindings, function (idx, bindingDef) {
+        if (Bindings.exactMatch(bindingDef.parsedSequence, pendingKeystrokes)) {
+          matchedBinding = bindingDef;
           return;
         }
 
-        if (Bindings.hasPrefix(binding_def.parsedSequence, pendingKeystrokes)) {
+        if (Bindings.hasPrefix(bindingDef.parsedSequence, pendingKeystrokes)) {
           partialMatch = true;
         }
       });
