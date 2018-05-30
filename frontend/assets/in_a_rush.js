@@ -123,11 +123,17 @@ $(function () {
       selector.addClass('in-a-rush-focused');
     },
 
-    focusSubrecordIfNeeded: function () {
-      var subrecord = $(':focus').closest('.subrecord-form-fields');
+    focusSubrecordIfNeeded: function (heading_elt) {
+      var subrecord = heading_elt ?
+                      $(heading_elt).next('.subrecord-form-container').find('.subrecord-form-fields').last() :
+                      $(':focus').closest('.subrecord-form-fields');
 
       if (subrecord.length !== 1) {
         return;
+      }
+
+      if ($(':focus').length === 0) {
+        subrecord.find(':input:visible').first().focus();
       }
 
       var offset = subrecord[0].getBoundingClientRect();
@@ -660,7 +666,7 @@ $(function () {
     keySequence: ['Control-e', 'd'],
     handler: function () {
       $('form.aspace-record-form section[data-object-name="date"] .subrecord-form-heading .btn')[0].click();
-      FormNavigation.focusSubrecordIfNeeded();
+      FormNavigation.focusSubrecordIfNeeded($('form.aspace-record-form section[data-object-name="date"] .subrecord-form-heading'));
     },
     description: translate('date_subrecord'),
     condition: function () {
@@ -674,7 +680,7 @@ $(function () {
     keySequence: ['Control-e', 'e'],
     handler: function () {
       $('form.aspace-record-form section[data-object-name="extent"] .subrecord-form-heading .btn')[0].click();
-      FormNavigation.focusSubrecordIfNeeded();
+      FormNavigation.focusSubrecordIfNeeded($('form.aspace-record-form section[data-object-name="extent"] .subrecord-form-heading'));
     },
     description: translate('extent_subrecord'),
     condition: function () {
@@ -688,7 +694,7 @@ $(function () {
     keySequence: ['Control-e', 'l'],
     handler: function () {
       $('form.aspace-record-form section[data-object-name="linked_agent"] .subrecord-form-heading .btn')[0].click();
-      FormNavigation.focusSubrecordIfNeeded();
+      FormNavigation.focusSubrecordIfNeeded($('form.aspace-record-form section[data-object-name="linked_agent"] .subrecord-form-heading'));
     },
     description: translate('agent_subrecord'),
     condition: function () {
@@ -702,7 +708,7 @@ $(function () {
     keySequence: ['Control-e', 's'],
     handler: function () {
       $('form.aspace-record-form section[data-object-name="subject"] .subrecord-form-heading .btn')[0].click();
-      FormNavigation.focusSubrecordIfNeeded();
+      FormNavigation.focusSubrecordIfNeeded($('form.aspace-record-form section[data-object-name="subject"] .subrecord-form-heading'));
     },
     description: translate('subject_subrecord'),
     condition: function () {
@@ -729,7 +735,7 @@ $(function () {
     keySequence: ['Control-e', 'x'],
     handler: function () {
       $('form.aspace-record-form section[data-object-name="external_document"] .subrecord-form-heading .btn')[0].click();
-      FormNavigation.focusSubrecordIfNeeded();
+      FormNavigation.focusSubrecordIfNeeded($('form.aspace-record-form section[data-object-name="external_document"] .subrecord-form-heading'));
     },
     description: translate('external_document_subrecord'),
     condition: function () {
@@ -743,7 +749,7 @@ $(function () {
     keySequence: ['Control-e', 'c'],
     handler: function () {
       $('form.aspace-record-form section[data-object-name="instance"] .subrecord-form-heading .btn')[0].click();
-      FormNavigation.focusSubrecordIfNeeded();
+      FormNavigation.focusSubrecordIfNeeded($('form.aspace-record-form section[data-object-name="instance"] .subrecord-form-heading'));
     },
     description: translate('container_instance_subrecord'),
     condition: function () {
@@ -757,7 +763,7 @@ $(function () {
     keySequence: ['Control-e', 'o'],
     handler: function () {
       $('form.aspace-record-form section[data-object-name="instance"] .subrecord-form-heading .btn')[1].click();
-      FormNavigation.focusSubrecordIfNeeded();
+      FormNavigation.focusSubrecordIfNeeded($('form.aspace-record-form section[data-object-name="instance"] .subrecord-form-heading'));
     },
     description: translate('digital_object_instance_subrecord'),
     condition: function () {
@@ -770,8 +776,8 @@ $(function () {
     id: 'note_subrecord',
     keySequence: ['Control-e', 'n'],
     handler: function () {
-      $('form.aspace-record-form #notes .subrecord-form-heading .add-note')[1].click();
-      FormNavigation.focusSubrecordIfNeeded();
+      $('form.aspace-record-form #notes .subrecord-form-heading .add-note')[0].click();
+      FormNavigation.focusSubrecordIfNeeded($('form.aspace-record-form #notes .subrecord-form-heading .add-note'));
     },
     description: translate('note_subrecord'),
     condition: function () {
@@ -816,11 +822,11 @@ $(function () {
     id: 'save_record',
     keySequence: ['Control-s'],
     handler: function () {
-      $('form.aspace-record-form .form-actions button.btn-primary').click();
+      $('form.aspace-record-form .form-actions button.btn-primary:visible').click();
     },
     description: translate('save_record'),
     condition: function () {
-      return $('form.aspace-record-form .form-actions button.btn-primary').length > 0;
+      return $('form.aspace-record-form .form-actions button.btn-primary:visible').length > 0;
     },
     category: translate('category_edit'),
   });
@@ -829,11 +835,11 @@ $(function () {
     id: 'close_record',
     keySequence: ['Control-k'],
     handler: function () {
-      $('form.aspace-record-form .form-actions .btn-cancel')[0].click();
+      $('form.aspace-record-form .form-actions .btn-cancel:visible')[0].click();
     },
     description: translate('close_record'),
     condition: function () {
-      return $('form.aspace-record-form .form-actions .btn-cancel').length > 0;
+      return $('form.aspace-record-form .form-actions .btn-cancel:visible').length > 0;
     },
     category: translate('category_edit'),
   });
