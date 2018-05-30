@@ -777,7 +777,7 @@ $(function () {
     keySequence: ['Control-e', 'n'],
     handler: function () {
       $('form.aspace-record-form #notes .subrecord-form-heading .add-note')[0].click();
-      FormNavigation.focusSubrecordIfNeeded($('form.aspace-record-form #notes .subrecord-form-heading .add-note'));
+      FormNavigation.focusSubrecordIfNeeded($('form.aspace-record-form #notes .subrecord-form-heading'));
     },
     description: translate('note_subrecord'),
     condition: function () {
