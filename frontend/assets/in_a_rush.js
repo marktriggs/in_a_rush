@@ -140,7 +140,7 @@ $(function () {
       var viewportHeight = (window.innerHeight || document. documentElement.clientHeight);
 
       if (offset.top < 0 || offset.bottom > viewportHeight) {
-        $(window).scrollTo(subrecord, 500);
+        $(window).scrollTo(subrecord, 500, { offset: -50 });
       }
     },
   };
