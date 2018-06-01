@@ -41,7 +41,7 @@ $(function () {
       var modifiers = [];
       var key = undefined;
 
-      var metaPattern = /(Control|Alt|Meta)-/g;
+      var metaPattern = /(Control|Shift|Alt|Meta)-/g;
 
       var lastIndex = 0;
       while (true) {
@@ -69,9 +69,10 @@ $(function () {
       if (event.ctrlKey)  { modifiers.push("Control"); }
       if (event.altKey)   { modifiers.push("Alt");     }
       if (event.metaKey)  { modifiers.push("Meta");    }
+      if (event.shiftKey)  { modifiers.push("Shift");  }
 
       return {
-        key: event.key,
+        key: event.key.toLowerCase(),
         modifiers: modifiers.sort(),
       };
     },
@@ -504,7 +505,7 @@ $(function () {
 
   Bindings.addBinding({
     id: 'open_browse_menu',
-    keySequence: ['B'],
+    keySequence: ['Shift-b'],
     handler: function () { $('li.browse-container a.dropdown-toggle').trigger('click.bs.dropdown'); },
     description: translate('open_browse_menu'),
     condition: function () { return $('li.browse-container a.dropdown-toggle').length > 0; },
@@ -512,8 +513,22 @@ $(function () {
   });
 
   Bindings.addBinding({
+    id: 'toggle_advanced_search',
+    keySequence: ['Shift-|'],
+    handler: function () {
+      $('button.search-switcher')[0].click();
+      setTimeout(function () {
+        $('.advanced-search-row-container :input:visible').first().focus();
+      });
+    },
+    description: translate('toggle_advanced_search'),
+    condition: function () { return $('button.search-switcher').length > 0; },
+    category: translate('category_navigate'),
+  });
+
+  Bindings.addBinding({
     id: 'open_create_menu',
-    keySequence: ['C'],
+    keySequence: ['Shift-c'],
     handler: function () { $('li.create-container a.dropdown-toggle').trigger('click.bs.dropdown'); },
     description: translate('open_create_menu'),
     condition: function () { return $('li.create-container a.dropdown-toggle').length > 0; },
