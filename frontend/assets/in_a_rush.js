@@ -734,7 +734,7 @@ $(function () {
 
   Bindings.addBinding({
     id: 'remove_subrecord',
-    keySequence: ['Control-e', 'k'],
+    keySequence: ['Control-e', 'r'],
     handler: function () {
       var elt = $(':focus').closest('.subrecord-form-fields').prev('.subrecord-form-remove')[0];
 
