@@ -736,11 +736,25 @@ $(function () {
     id: 'remove_subrecord',
     keySequence: ['Control-e', 'k'],
     handler: function () {
-      $(':focus').closest('.subrecord-form-fields').prev('.subrecord-form-remove')[0].click();
+      var elt = $(':focus').closest('.subrecord-form-fields').prev('.subrecord-form-remove')[0];
+
+      /* If our immediate subrecord-form-fields didn't have a remove button, we
+         might be in a note subrecord, which have an extra level of
+         subrecord-form-fields nesting.  Keep looking! */
+      if (!elt) {
+        elt = $(':focus').parents('.subrecord-form-fields').last().prev('.subrecord-form-remove')[0];
+      }
+
+      if (elt) {
+        elt.click();
+      }
     },
     description: translate('remove_subrecord'),
     condition: function () {
-      return $(':focus').closest('.subrecord-form-fields').prev('.subrecord-form-remove').length > 0;
+      return (
+        $(':focus').closest('.subrecord-form-fields').prev('.subrecord-form-remove').length > 0 ||
+        $(':focus').parents('.subrecord-form-fields').last().prev('.subrecord-form-remove').length > 0
+      );
     },
     category: translate('category_edit'),
   });
