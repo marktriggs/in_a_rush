@@ -872,16 +872,4 @@ $(function () {
     },
     category: translate('category_edit'),
   });
-
-  Bindings.addBinding({
-    id: 'become_admin',
-    keySequence: ['i', 'd', 'd', 'q', 'd'],
-    handler: function () {
-      setTimeout(function () {
-        window.alert("Nice try.");
-      }, 200);
-    },
-    description: translate('become_admin'),
-    category: translate('category_miscellaneous'),
-  });
 });
