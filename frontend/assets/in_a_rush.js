@@ -876,11 +876,11 @@ $(function () {
     id: 'close_record',
     keySequence: ['Control-k'],
     handler: function () {
-      $('form.aspace-record-form .form-actions .btn-cancel:visible')[0].click();
+      $('.breadcrumb-row li.active').prev('li').find('a')[0].click();
     },
     description: translate('close_record'),
     condition: function () {
-      return $('form.aspace-record-form .form-actions .btn-cancel:visible').length > 0;
+      return $('.breadcrumb-row li.active').prev('li').find('a').length > 0;
     },
     category: translate('category_edit'),
   });
