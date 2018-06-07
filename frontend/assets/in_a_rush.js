@@ -10,6 +10,12 @@ $(function () {
   /* Registered key bindings */
   var bindings = [];
 
+  /* For the sake of how we display mappings to users, sometimes we want to
+     pretend that what they really entered is something different.  For example,
+     'Shift-|' is rendered as 'Shift-\'. */
+  var KEY_TRANSLATIONS = {
+    '|': '\\',
+  }
 
   var translate = function(s) {
     return (IN_A_RUSH_TRANSLATIONS[s] || s);
@@ -71,8 +77,14 @@ $(function () {
       if (event.metaKey)  { modifiers.push("Meta");    }
       if (event.shiftKey)  { modifiers.push("Shift");  }
 
+      var key = event.key.toLowerCase();
+
+      if (KEY_TRANSLATIONS[key]) {
+        key = KEY_TRANSLATIONS[key];
+      }
+
       return {
-        key: event.key.toLowerCase(),
+        key: key,
         modifiers: modifiers.sort(),
       };
     },
@@ -514,7 +526,7 @@ $(function () {
 
   Bindings.addBinding({
     id: 'toggle_advanced_search',
-    keySequence: ['Shift-|'],
+    keySequence: ['Shift-\\'],
     handler: function () {
       $('button.search-switcher')[0].click();
       setTimeout(function () {
