@@ -15,7 +15,7 @@ $(function () {
      'Shift-|' is rendered as 'Shift-\'. */
   var KEY_TRANSLATIONS = {
     '|': '\\',
-  }
+  };
 
   var translate = function(s) {
     return (IN_A_RUSH_TRANSLATIONS[s] || s);
@@ -340,14 +340,29 @@ $(function () {
       return result;
     },
 
-    /* Handle a keydown event */
-    handleKeypress: function (event) {
-      if (!event.ctrlKey && pendingKeystrokes.length === 0) {
+    eventIntendedForFormElement: function (event) {
+      /* We don't want to catch input events in a form control UNLESS the event
+         was a control-modified key sequence. */
+      if (event.ctrlKey ||
+          (pendingKeystrokes.length > 0 && $.inArray('Control', pendingKeystrokes[0].modifiers) >= 0)) {
+        /* This is a control-modified sequence, so we won't ignore it. */
+        return false;
+      } else {
         if ($.inArray(event.target.tagName, ['INPUT', 'TEXTAREA', 'SELECT']) >= 0 ||
             event.target.isContentEditable) {
           /* Leave it alone */
           return true;
         }
+      }
+
+      return false;
+    },
+
+
+    /* Handle a keydown event */
+    handleKeypress: function (event) {
+      if (Bindings.eventIntendedForFormElement(event)) {
+        return true;
       }
 
       var key = KeyParsing.parseKeydown(event);
@@ -441,6 +456,10 @@ $(function () {
 
   document.addEventListener('keydown', function (event) {
     if (event.key == '?') {
+      if (Bindings.eventIntendedForFormElement(event)) {
+        return true;
+      }
+
       pendingKeystrokes = [];
       Help.updateKeystrokeIndicator();
       Help.showHelpModal();
